@@ -1,4 +1,8 @@
-# Daneel — Computational Astrophysics 2026–27
+# Daneel — GLISE486b 
+
+Good Luck Interpreting Every Strange Exoplanet
+
+4(hours of sleep) 8(cups of coffee) 6(prayers) b(etter be worth it)
 
 A teaching package for modelling exoplanet transits and building detection
 pipelines. The repository contains the course example code, a runnable CLI,
@@ -30,19 +34,23 @@ pip install -e '.[dev,docs]'
 After installation, you can run daneel from the command line:
 
 ```bash
-daneel -i <input_file> --transit
+daneel -i <input_file> --transit --output
 ```
 
 ### Command-line options
 
 - `-i, --input`: Input parameter file (or it use G486b values)
 - `-t, --transit`: Generate a transit light curve from the YAML input
+- `-o, --output`: Save the transit plot in the current working directory
 
 ### Examples
 
 ```bash
-# Run exoplanet detection
-daneel -i examples/params.yaml -t
+# Run exoplanet detection with default settings
+daneel --transit
+
+# Run exoplanet detection with a given config and save the plot
+daneel -i examples/params.yaml -t -o
 
 ```
 

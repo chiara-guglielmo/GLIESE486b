@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Reusable calculation for exoplanet lightcurves
-def transit(params_dict=None):
+def transit(params_dict=None, save=False):
     """
     A function allowing to compute and plot the transit lightcurve of exoplanets using the batman package.
     Keyword argouments:
@@ -51,7 +51,10 @@ def transit(params_dict=None):
     ax.grid(alpha=0.25)
     ax.legend(loc="best")
     fig.tight_layout()
-    #fig.savefig(output_file, dpi=180, bbox_inches="tight")
+    if save:
+        output_file = Path.cwd() / f"{planet_slug}_transit.png"
+        fig.savefig(output_file, dpi=180, bbox_inches="tight")
+        print(f"Transit plot saved to: {output_file}")
     plt.show()
 
 if __name__ == "__main__":

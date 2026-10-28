@@ -10,17 +10,19 @@ def main():
 
     parser.add_argument("-i", "--input", type=str, default=None, help="Path to the YAML configuration file")
 
+    parser.add_argument("-o", "--output", action="store_true", help="Save the transit plot in the current working directory")
+
     args = parser.parse_args()
 
     if args.transit:
+        transit_params = None
         if args.input is not None:
             parameters = Parameters(args.input)
             transit_params = parameters.get("transit")
             if not isinstance(transit_params, dict) or not transit_params:
                 parser.error("The YAML file must contain a non-empty 'transit' dictionary.")
-            transit(transit_params)
-        else:
-            transit()
+        
+        transit(transit_params, save=args.output)
 
 if __name__ == "__main__":
     main()

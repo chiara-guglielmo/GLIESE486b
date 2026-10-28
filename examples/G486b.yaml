@@ -1,0 +1,12 @@
+# Transit parameters for GJ 486 b (BATMAN)
+transit:
+  name: "GJ 486 b"          # Planet name
+  t0: 0.0                  # Mid-transit time [days]
+  per: 1.46712127          # Orbital period [days]
+  rp: 0.037244             # Planet-to-star radius ratio (Rp/Rs)
+  a: 11.380                # Semi-major axis in stellar radii (a/Rs)
+  inc: 89.39               # Orbital inclination [degrees]
+  ecc: 0.000860            # Orbital eccentricity
+  w: 14.0                  # Argument of periastron [degrees]
+  limb_dark: "quadratic"   # Limb-darkening law
+  u: [0.0606, 0.1724]     # Quadratic limb-darkening coefficients

@@ -4,19 +4,18 @@ A teaching package for modelling exoplanet transits and building detection
 pipelines. The repository contains the course example code, a runnable CLI,
 and Sphinx documentation.
 
-Documentation: <https://tiziano1590.github.io/comp_astro_26/>.
 
 ## Installation
 
 ### Prerequisites
 
-- Python >= 3.10
+- Python = 3.10
 
 ### Install from source
 
 ```bash
-git clone https://github.com/tiziano1590/comp_astro_26.git
-cd comp_astro_26
+git clone https://github.com/chiara-guglielmo/GLIESE486b.git
+cd GLIESE486b
 pip install .
 ```
 
@@ -31,28 +30,20 @@ pip install -e '.[dev,docs]'
 After installation, you can run daneel from the command line:
 
 ```bash
-daneel -i <input_file> --transit [--output lightcurve.png]
+daneel -i <input_file> --transit
 ```
 
 ### Command-line options
 
-- `-i, --input`: Input parameter file (required)
+- `-i, --input`: Input parameter file (or it use G486b values)
 - `-t, --transit`: Generate a transit light curve from the YAML input
-- `-d, --detect`: Reserved for the course detection exercise
-- `-a, --atmosphere`: Reserved for the course atmosphere exercise
-- `-o, --output`: Output path for the transit plot (default: `lc.png`)
 
 ### Examples
 
 ```bash
 # Run exoplanet detection
-daneel -i examples/params.yaml --transit --output lightcurve.png
+daneel -i examples/params.yaml -t
 
-# Run atmospheric characterization
-daneel -i examples/params.yaml --detect
-
-# Run both detection and atmospheric analysis
-daneel -i examples/params.yaml --atmosphere
 ```
 
 ## Input File Format
@@ -76,4 +67,7 @@ This project is licensed under the GNU General Public License v3.0.
 
 ## Author
 
-Tiziano Zingales (tiziano.zingales@unipd.it)
+Tiziano Zingales (tiziano.zingales@unipd.it), 
+Angelica Plazzotta (angelica.plazzotta@studenti.unipd.it), 
+Chiara Guglielmo (chiara.guglielmo.1@studenti.unipd.it), 
+Mattia Saccon (mattia.saccon@studenti.unipd.it)

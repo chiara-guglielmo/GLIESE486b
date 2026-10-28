@@ -1,4 +1,40 @@
 import argparse
+import yaml
+from .detection.transit import transit
+
+def main():
+    parser = argparse.ArgumentParser(description="Daneel: a Python package to model and analyse exoplanet transits")
+
+    parser.add_argument("-t", "--transit", action="store_true", help="Plot a transit light curve")
+
+    parser.add_argument("-i", "--input", type=str, default=None, help="Path to the YAML configuration file")
+
+
+    args = parser.parse_args()
+
+    params_dict = {}
+
+    if args.input is not None:
+        with open(args.input, "r") as file:
+            params_dict = yaml.safe_load(file)
+        if not isinstance(params_dict, dict) or not params_dict:
+            parser.error("The YAML file must contain a dictionary of parameters, see /examples/params.yaml")
+
+    if args.transit:
+        if args.input is not None:
+            transit_params = params_dict.get("transit")
+            if not isinstance(transit_params, dict) or not transit_params:
+                parser.error("The YAML file must contain a non-empty 'transit' dictionary.")
+            transit(transit_params)
+        else:
+            transit()
+
+if __name__ == "__main__":
+    main()
+
+
+
+'''
 from datetime import datetime, timezone
 
 from daneel.detection import TransitModel
@@ -41,7 +77,7 @@ def main():
 
     finish = datetime.now(timezone.utc)
     print(f"Daneel completed in {(finish - start).total_seconds():.2f}s")
-
+'''
 
 if __name__ == "__main__":
     main()

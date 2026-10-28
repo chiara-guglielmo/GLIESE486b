@@ -51,8 +51,8 @@ def transit(params_dict=None):
     ax.grid(alpha=0.25)
     ax.legend(loc="best")
     fig.tight_layout()
-    fig.savefig(output_file, dpi=180, bbox_inches="tight")
+    #fig.savefig(output_file, dpi=180, bbox_inches="tight")
     plt.show()
 
-# Call the function above
-transit()
+if __name__ == "__main__":
+    transit()

@@ -1,6 +1,7 @@
 import argparse
 import yaml
 from .detection.transit import transit
+from .parameters.parameters import Parameters
 
 def main():
     parser = argparse.ArgumentParser(description="Daneel: a Python package to model and analyse exoplanet transits")
@@ -9,20 +10,12 @@ def main():
 
     parser.add_argument("-i", "--input", type=str, default=None, help="Path to the YAML configuration file")
 
-
     args = parser.parse_args()
-
-    params_dict = {}
-
-    if args.input is not None:
-        with open(args.input, "r") as file:
-            params_dict = yaml.safe_load(file)
-        if not isinstance(params_dict, dict) or not params_dict:
-            parser.error("The YAML file must contain a dictionary of parameters, see /examples/params.yaml")
 
     if args.transit:
         if args.input is not None:
-            transit_params = params_dict.get("transit")
+            parameters = Parameters(args.input)
+            transit_params = parameters.get("transit")
             if not isinstance(transit_params, dict) or not transit_params:
                 parser.error("The YAML file must contain a non-empty 'transit' dictionary.")
             transit(transit_params)

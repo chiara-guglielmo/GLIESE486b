@@ -13,7 +13,7 @@ and Sphinx documentation.
 
 ### Prerequisites
 
-- Python = 3.10
+- Python = 3.10.x
 
 ### Install from source
 

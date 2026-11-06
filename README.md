@@ -39,7 +39,7 @@ daneel -i <input_file> --transit --output
 
 ### Command-line options
 
-- `-i, --input`: Input parameter file (or it use G486b values)
+- `-i, --input`: Input parameter file(s) (or it use G486b values)
 - `-t, --transit`: Generate a transit light curve from the YAML input
 - `-o, --output`: Save the transit plot in the current working directory
 
@@ -56,7 +56,7 @@ daneel -i examples/params.yaml -t -o
 
 ## Input File Format
 
-The input file should be a YAML file containing the necessary parameters for the analysis.
+The input file(s) should be one or more YAML files containing the necessary parameters for the analysis.
 
 ## Development
 

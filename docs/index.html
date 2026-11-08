@@ -5,13 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Daneel Documentation &#8212; Daneel 0.0.1 documentation</title>
+    <title>GLIESE486b Documentation &#8212; GLIESE486b 0.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
-    <script src="_static/documentation_options.js?v=d45e8c67"></script>
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=01f34227"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <link rel="canonical" href="https://tiziano1590.github.io/comp_astro_26/index.html" />
+    <link rel="canonical" href="https://chiara-guglielmo.github.io/GLIESE486b/index.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="daneel" href="modules.html" />
@@ -32,23 +33,32 @@
 
           <div class="body" role="main">
             
-  <section id="daneel-documentation">
-<h1>Daneel Documentation<a class="headerlink" href="#daneel-documentation" title="Link to this heading">¶</a></h1>
-<p>Daneel is a practical tool for detecting and characterizing exoplanets.</p>
+  <section id="gliese486b-documentation">
+<h1>GLIESE486b Documentation<a class="headerlink" href="#gliese486b-documentation" title="Link to this heading">¶</a></h1>
+<p>GLIESE486b uses the Daneel Python package to model exoplanet transits.
+The command-line tool can plot a synthetic light curve for GJ 486 b or
+compare light curves from multiple YAML configuration files.</p>
+<p>Source code and examples are available in the
+<a class="reference external" href="https://github.com/chiara-guglielmo/GLIESE486b">GLIESE486b GitHub repository</a>.</p>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
-<p>To install Daneel from source:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/tiziano1590/comp_astro_26.git
-<span class="nb">cd</span><span class="w"> </span>comp_astro_26
-pip<span class="w"> </span>install<span class="w"> </span>.
+<p>Use Python 3.10 and install Daneel from the repository.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/chiara-guglielmo/GLIESE486b.git
+<span class="nb">cd</span><span class="w"> </span>GLIESE486b
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
 </pre></div>
 </div>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
-<p>Daneel can be used from the command line:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>daneel<span class="w"> </span>-i<span class="w"> </span>parameters.yaml<span class="w"> </span>-d<span class="w">  </span><span class="c1"># Run exoplanet detection</span>
-daneel<span class="w"> </span>-i<span class="w"> </span>parameters.yaml<span class="w"> </span>-a<span class="w">  </span><span class="c1"># Run atmospheric characterization</span>
+<p>Plot the transit light curve for GJ 486 b using the default parameters.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>daneel<span class="w"> </span>--transit
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">--input</span></code> to provide one or more YAML files, each with a non-empty
+<code class="docutils literal notranslate"><span class="pre">transit</span></code> mapping. The following command compares two configurations and
+saves a PNG in the current directory.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>daneel<span class="w"> </span>--transit<span class="w"> </span>--input<span class="w"> </span>examples/G486b.yaml<span class="w"> </span>examples/G486b_halfR.yaml<span class="w"> </span>--output
 </pre></div>
 </div>
 </section>
@@ -73,7 +83,7 @@ daneel<span class="w"> </span>-i<span class="w"> </span>parameters.yaml<span cla
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="#">Daneel</a></h1>
+<h1 class="logo"><a href="#">GLIESE486b</a></h1>
 
 
 
@@ -82,7 +92,16 @@ daneel<span class="w"> </span>-i<span class="w"> </span>parameters.yaml<span cla
 
 
 
-<h3>Navigation</h3>
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">daneel</a></li>
@@ -96,16 +115,6 @@ daneel<span class="w"> </span>-i<span class="w"> </span>parameters.yaml<span cla
   </ul></li>
 </ul>
 </div>
-<search id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</search>
-<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -122,8 +131,8 @@ daneel<span class="w"> </span>-i<span class="w"> </span>parameters.yaml<span cla
       &#169;2026, Tiziano Zingales.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
-      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
       <a href="_sources/index.rst.txt"

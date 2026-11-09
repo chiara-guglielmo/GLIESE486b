@@ -8,6 +8,7 @@ A teaching package for modelling exoplanet transits and building detection
 pipelines. The repository contains the course example code, a runnable CLI,
 and Sphinx documentation.
 
+Documentation: https://chiara-guglielmo.github.io/GLIESE486b/
 
 ## Installation
 

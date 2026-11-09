@@ -18,15 +18,13 @@ class DataSetCreation:
 
     Parameters
     ----------
-    model : object, optional
-        Model reference retained for compatibility with existing callers.
     csv_path : str or path-like
         Source CSV containing light-curve flux bins, labels, and TIC identifiers.
     mode : {"machine_learning", "deep_learning"}, optional
         Output format selected by prepare(). Default is "machine_learning".
     """
 
-    def __init__(self, model=None, csv_path=None, *, mode="machine_learning"):
+    def __init__(self, csv_path=None, *, mode="machine_learning"):
         """Configure the CSV source and the output mode used by prepare()."""
         if not isinstance(mode, str) or mode not in ("machine_learning", "deep_learning"):
             raise ValueError("mode must be 'machine_learning' or 'deep_learning'.")
@@ -34,7 +32,6 @@ class DataSetCreation:
             raise TypeError("csv_path is required.")
 
         # Keep the legacy model argument for existing callers.
-        self.model = model
         self.csv_path = csv_path
         self._mode = mode
 

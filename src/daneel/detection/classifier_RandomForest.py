@@ -6,9 +6,14 @@ import matplotlib.pyplot as plt
 from dataset import DataSetCreation
 from pathlib import Path
 
+from sklearn.ensemble import RandomForestClassifier
+
+
+
 class RandomForestClassifier:
 
     """...."""
 
-    def fit(self, X, y):
-        raise NotImplementedError("Random-forest training is a course exercise")
+
+
+   

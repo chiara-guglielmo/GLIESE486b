@@ -100,7 +100,7 @@ def main():
 
     finish = datetime.now(timezone.utc)
     print(f"Daneel completed in {(finish - start).total_seconds():.2f}s")
-'''
 
 if __name__ == "__main__":
     main()
+'''

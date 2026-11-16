@@ -1,6 +1,7 @@
 # Imports and configuration
 import numpy as np
 import pandas as pd
+import gc
 import matplotlib.pyplot as plt
 from pathlib import Path
 import joblib
@@ -10,6 +11,7 @@ from sklearn.metrics import (
     confusion_matrix, classification_report, accuracy_score,
     roc_auc_score, roc_curve
 )
+from sklearn.model_selection import GridSearchCV
 
 
 from .dataset import DataSetCreation
@@ -212,8 +214,56 @@ class RandomForest_classifier:
             plt.savefig(save_path, dpi=300)
             print(f"Confusion matrix plot saved to: {save_path}")  
         plt.show()
+        plt.close(fig)
+        gc.collect()
 
         return cm, metrics
+
+    def tune_hyperparameter(self, input_cv=3, input_scoring='accuracy'):
+        """
+        ...
+        """
+        print(" ")
+        print("HYPERPARAMETERS TUNING")
+
+        # Check that hyperparameter tuning can be performed
+        if not isinstance(self.param_configs, list) or len(self.param_configs) <= 1:
+            print("Optimization of hyperparameters cannot be performed unless a list of different combinations is provided.")
+            return None
+
+        # Select and extract target parameters to be tuned
+        target_keys = {'max_depth', 'min_samples_leaf', 'max_features', 'n_estimators'}
+        param_grid = {}
+        for d in self.param_configs:  # Loop over hyperparameters dictionaries
+            for k, v in d.items():
+                if k in target_keys:
+                    if k not in param_grid:
+                        param_grid[k] = []
+                    if v not in param_grid[k]:
+                        param_grid[k].append(v)
+        
+        # Check that the grid actually contains multiple choices for optimization
+        total_combinations = 1
+        for values in param_grid.values():
+            total_combinations *= len(values)
+        if total_combinations <= 1:
+            print("Optimization of hyperparameters cannot be performed provided configurations do not create multiple combinations for the target parameters.")
+            return None
+
+        # Perform hyperparameter tuning using Grid Search
+        rf = RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=-1)
+        grid_search_rf = GridSearchCV(
+            estimator=rf,
+            param_grid=param_grid,
+            cv=input_cv,
+            scoring=input_scoring,
+            return_train_score=True)
+
+        grid_search_rf.fit(self.X_train, self.y_train)
+        print(f"Best parameters found: {grid_search_rf.best_params_}")
+
+        return grid_search_rf.best_params_
+        
 
     def run_all_configurations(self):
         """
@@ -238,7 +288,10 @@ class RandomForest_classifier:
             conf_matrix, metrics = self.compute_confusion_matrix()
             results.append((params, conf_matrix, metrics))
 
-        return results
+        if isinstance(self.param_configs, list):
+            best_parameters = self.tune_hyperparameter()
+
+        return results, best_parameters
 
 
 if __name__ == "__main__":

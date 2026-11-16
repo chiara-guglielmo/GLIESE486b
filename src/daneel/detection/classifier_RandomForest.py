@@ -12,7 +12,7 @@ from sklearn.metrics import (
 )
 
 
-from dataset import DataSetCreation
+from .dataset import DataSetCreation
 
 # Reproducibility
 RANDOM_STATE = 42
@@ -22,55 +22,66 @@ np.random.seed(RANDOM_STATE)
 class RandomForest_classifier:
     """Class implementing Random Forest classifier supporting single or multiple hyperparameter sets."""
 
-    def __init__(self, csv_path=None, RF_params=None):
+    def __init__(self, config):
         """
         Initialize the Random Forest classifier configuration and load the dataset.
 
         Parameters
         ----------
-        csv_path : str or path-like
-            Path to the input CSV file containing the data. Required.
-        RF_params : dict or list of dict, optional
-            Hyperparameters for the Random Forest classifier. If a dictionary is provided, 
-            it contains a single configuration. If a list of dictionaries is provided, 
-            multiple configurations will be evaluated (default is None, which uses default 
-            hyperparameters).
+        config : dict
+            Configuration dictionary loaded from the YAML parameters file, containing:
+            - dataset_path : str or path-like
+                Path to the input CSV file containing the data. Required.
+            - RF_params : dict or list of dict, optional
+                Hyperparameters for the Random Forest classifier. If a dictionary is provided, 
+                it contains a single configuration. If a list of dictionaries is provided, 
+                multiple configurations will be evaluated (default is None, which uses default 
+                hyperparameters).
         """
 
-        if csv_path is None:
-            raise TypeError("csv_path is required.")
-    
-        self.csv_path = csv_path
+        self.config = config
+
+        # Import dataset_path from configuration file
+        dataset_path = config.get("dataset_path")
+        self.csv_path = Path(dataset_path)
+        if self.csv_path is None:
+            raise ValueError("dataset_path must be specified in the YAML configuration.")
 
         # Define default hyperparameters and update them if other input hyperparameters are given
         default_params = {
-        'n_estimators': 500,
-        'max_depth': None,
-        'min_samples_leaf': 1,
-        'max_features': 'sqrt',
-        'bootstrap': True,
-        'class_weight': None,
-        'random_state': RANDOM_STATE,
-        'n_jobs': -1,
-        'oob_score': True
-        }
+            'n_estimators': 500,
+            'max_depth': None,
+            'min_samples_leaf': 1,
+            'max_features': 'sqrt',
+            'bootstrap': True,
+            'class_weight': None,
+            'random_state': RANDOM_STATE,
+            'n_jobs': -1,
+            'oob_score': True
+            }
+
+        # Import hyperparameters of the model from the configuration file
+        raw_params = config.get("RF_params")
+        self.param_configs = []
 
         # Handle whether RF_params is a single dict, a list of dicts, or None
-        if isinstance(RF_params, list):  # List of different sets of hyperparameters
+        if raw_params is None or raw_params == {}:  # No hyperparameters in input
+            self.param_configs.append(default_params)
+        elif isinstance(raw_params, list):  # List of different sets of hyperparameters
             self.param_configs = []
-            for params in RF_params:
+            for params in raw_params:
                 p = default_params.copy()
                 p.update(params)
                 self.param_configs.append(p)
-            self.model = RandomForestClassifier(**self.param_configs[0])
         else:
             default_params = default_params.copy()  # Single set of parameters (or None)
-            if RF_params is not None:
-                default_params.update(RF_params)
+            if raw_params is not None:
+                default_params.update(raw_params)
             self.RF_params = default_params
             self.param_configs = [default_params]
-            self.model = RandomForestClassifier(**self.RF_params)
 
+        # Initialize model with the first configuration by default
+        self.model = RandomForestClassifier(**self.param_configs[0])
         self.load_data()
 
     def load_data(self):

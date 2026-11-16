@@ -1,6 +1,8 @@
 import argparse
 import yaml
+from .detection.dataset import DataSetCreation
 from .detection.transit import transit
+from .detection.classifier_RandomForest import RandomForest_classifier
 from .parameters.parameters import Parameters
 
 def main():
@@ -10,10 +12,13 @@ def main():
 
     parser.add_argument("-i", "--input", nargs="+", type=str, default=None, help="Paths to the YAML configuration files")
 
+    parser.add_argument("-d", "--detection", choices=["rf"], help="Run exoplanet detection through a Random Forest classifier")
+
     parser.add_argument("-o", "--output", action="store_true", help="Save the transit plot in the current working directory")
 
     args = parser.parse_args()
 
+    # Handle transit analysis
     if args.transit:
         transit_params_list = []
         transit_params = None
@@ -30,7 +35,22 @@ def main():
         else:
             transit_params_list = [None]
         
-        transit(transit_params_list, save=args.output)      
+        transit(transit_params_list, save=args.output)  
+
+    # Handle detection through Random Forest classifier
+    if args.detection == "rf":
+        if args.input is not None:
+
+            yaml_file = args.input[0] if isinstance(args.input, list) else args.input
+            parameters = Parameters(yaml_file)
+            config = {
+                "dataset_path": parameters.get("dataset_path"),
+                "RF_params": parameters.get("RF_params"),
+                "model_prefix": parameters.get("model_prefix", "tess_rf_model"),
+                "save_path": args.output if args.output else parameters.get("save_path", None)
+                }
+
+        RandomForest_classifier(config).run_all_configurations()
 
 if __name__ == "__main__":
     main()

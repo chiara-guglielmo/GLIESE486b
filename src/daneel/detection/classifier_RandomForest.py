@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+import joblib
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
@@ -85,11 +86,18 @@ class RandomForest_classifier:
             print(f"OOB Score: {self.model.oob_score_:.4f}")
         return self
 
-    def evaluate_with_optimal_threshold(self):
+    def evaluate_with_optimal_threshold(self, save_model=False, model_prefix="tess_rf_model"):
         """
         Evaluate the classification model's performances on a test dataset and dynamically calculates an optimal threshold using 
         Youden’s J statistic (derived from the ROC curve) to achieve the best possible balance between True Positive Rate (TPR) and 
-        False Positive Rate (FPR).
+        False Positive Rate (FPR), and optionally saves the model and threshold.
+
+        Parameters
+        ----------
+        save_model : bool, optional
+            If True, saves the trained model and optimal threshold to disk (default is False).
+        model_prefix : str, optional
+            Prefix for the saved model and threshold files (default is "tess_rf_model").
 
         Returns
         -------
@@ -126,6 +134,15 @@ class RandomForest_classifier:
         print(f"Accuracy @{best_thresh:.4f}: {acc_best:.4f} ({acc_best*100:.2f}%)")
     
         print(classification_report(self.y_test, y_pred_best, target_names=['Non-Planet','Planet'], digits=4, zero_division=0))
+
+        # Save trained model and optimal classification thresholdto disk
+        if save_model is True:
+            model_filename = f"{model_prefix}.joblib"
+            thresh_filename = f"{model_prefix}_optimal_threshold.npy"
+            
+            joblib.dump(self.model, model_filename)
+            np.save(thresh_filename, best_thresh)
+            print(f"Saved model: {model_filename}, {thresh_filename}")
         
         return y_pred_best, probability, best_thresh
 
@@ -151,15 +168,12 @@ class RandomForest_classifier:
         y_pred, probability, threshold = self.evaluate_with_optimal_threshold()
         metrics = probability, threshold
 
-        # Compute the confusion matrix using the scikit learn confusion_matrix function
+        # Compute the confusion matrix using the scikit learn confusion_matrix function and print it
         cm = confusion_matrix(y_true, y_pred)
         cm_df = pd.DataFrame(cm, 
                              index=['Actual: Non-Planet', 'Actual: Planet'], 
                              columns=['Pred: Non-Planet', 'Pred: Planet']
                              )
-
-        # Print the confusion matrix
-        tn, fp, fn, tp = cm.ravel()
         print("CONFUSION MATRIX EVALUATION")
         print(f"Confusion Matrix @ threshold {threshold:.3f})")
         print(cm_df)

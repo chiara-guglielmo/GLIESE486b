@@ -42,6 +42,7 @@ daneel -i <input_file> --transit --output
 
 - `-i, --input`: Input parameter file(s) (or it use G486b values)
 - `-t, --transit`: Generate a transit light curve from the YAML input
+- `-d, --detection {rf}`: Run exoplanet detection through a Random Forest classifier
 - `-o, --output`: Save the transit plot in the current working directory
 
 ### Examples

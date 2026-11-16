@@ -102,7 +102,7 @@ class RandomForest_classifier:
     def evaluate_with_optimal_threshold(self, save_model=False, model_prefix="tess_rf_model"):
         """
         Evaluate the classification model's performances on a test dataset and dynamically calculates an optimal threshold using 
-        Youden’s J statistic (derived from the ROC curve) to achieve the best possible balance between True Positive Rate (TPR) and 
+        Youden's J statistic (derived from the ROC curve) to achieve the best possible balance between True Positive Rate (TPR) and 
         False Positive Rate (FPR), and optionally saves the model and threshold.
 
         Parameters
@@ -131,7 +131,7 @@ class RandomForest_classifier:
         best_idx = np.argmax(j_scores)
         best_thresh = thresholds[best_idx]
 
-        # Compare predicions with default and optimal thresholds
+        # Compare predictions with default and optimal thresholds
         y_pred_default = (probability >= 0.5).astype(int)
         y_pred_best = (probability >= best_thresh).astype(int)
         auc = roc_auc_score(self.y_test, probability)
@@ -148,7 +148,7 @@ class RandomForest_classifier:
     
         print(classification_report(self.y_test, y_pred_best, target_names=['Non-Planet','Planet'], digits=4, zero_division=0))
 
-        # Save trained model and optimal classification thresholdto disk
+        # Save trained model and optimal classification threshold to disk
         if save_model is True:
             model_filename = f"{model_prefix}.joblib"
             thresh_filename = f"{model_prefix}_optimal_threshold.npy"
@@ -170,7 +170,7 @@ class RandomForest_classifier:
         Returns
         -------
         cm: numpy.ndarray of shape (2,2)
-            Confusion matrix with y_true as rows and y_pred as columns.  
+            Confusion matrix computed on self.y_test using Youden's J threshold.  
         metrics : tuple
             A tuple containing the evaluation metrics (probability, threshold).
         """
@@ -191,7 +191,7 @@ class RandomForest_classifier:
         print(f"Confusion Matrix @ threshold {threshold:.3f})")
         print(cm_df)
 
-        # Plot the confusion matrix and eventually save it save as a .png file
+        # Plot the confusion matrix and eventually save it as a file
         fig = plt.figure(figsize=(6, 5))
         ax = plt.gca()
         im = ax.imshow(cm, interpolation='nearest')
@@ -221,7 +221,32 @@ class RandomForest_classifier:
 
     def tune_hyperparameter(self, input_cv=3, input_scoring='accuracy'):
         """
-        ...
+        Perform exhaustive Grid Search hyperparameter tuning and evaluate the optimal model. Extracts unique 
+        values for 'max_depth', 'min_samples_leaf', 'max_features', and 'n_estimators' from `the list of 
+        hyperparameters' sets provided as input to construct a parameter grid, evaluates all combinations via 
+        cross-validation on the train dataset, updates 'self.model' to the optimal estimator, and computes its 
+        confusion matrix and optimal classification threshold metrics on the test set.
+
+        Parameters
+        ----------
+        input_cv : int, optional
+            Determines the cross-validation splitting strategy passed to sklearn.model_selection.GridSearchCV
+            (default is 3).
+        input_scoring : str or callable, optional
+            Strategy to evaluate the performance of the cross-validated model on the validation set (default 
+            is 'accuracy').
+
+        Returns
+        -------
+        best_params : dict or None
+            Dictionary mapping the tuned hyperparameter names to the values that achieved the best 
+            cross-validation score, or None if tuning could not be performed.
+        conf_matrix : numpy.ndarray of shape (2, 2) or None
+            Confusion matrix computed on self.y_test for the optimal estimator using Youden's J optimal 
+            threshold, or None if tuning was skipped.
+        metrics : tuple of (numpy.ndarray, float) or None
+            Tuple containing predicted positive-class probabilities and the optimal decision threshold for 
+            the best estimator, or None if tuning was skipped.
         """
         print(" ")
         print("HYPERPARAMETERS TUNING")
@@ -229,7 +254,7 @@ class RandomForest_classifier:
         # Check that hyperparameter tuning can be performed
         if not isinstance(self.param_configs, list) or len(self.param_configs) <= 1:
             print("Optimization of hyperparameters cannot be performed unless a list of different combinations is provided.")
-            return None
+            return None, None, None
 
         # Select and extract target parameters to be tuned
         target_keys = {'max_depth', 'min_samples_leaf', 'max_features', 'n_estimators'}
@@ -248,10 +273,10 @@ class RandomForest_classifier:
             total_combinations *= len(values)
         if total_combinations <= 1:
             print("Optimization of hyperparameters cannot be performed provided configurations do not create multiple combinations for the target parameters.")
-            return None
+            return None, None, None
 
         # Perform hyperparameter tuning using Grid Search
-        rf = RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=-1)
+        rf = RandomForestClassifier(random_state=RANDOM_STATE, oob_score=True, n_jobs=-1)
         grid_search_rf = GridSearchCV(
             estimator=rf,
             param_grid=param_grid,
@@ -260,9 +285,16 @@ class RandomForest_classifier:
             return_train_score=True)
 
         grid_search_rf.fit(self.X_train, self.y_train)
-        print(f"Best parameters found: {grid_search_rf.best_params_}")
+        print(f"Best parameters: {grid_search_rf.best_params_}")
 
-        return grid_search_rf.best_params_
+        # Update the model to the optimal one and compute all statistics
+        self.model = grid_search_rf.best_estimator_
+        if hasattr(self.model, 'oob_score_'):
+            print(f"Optimal Model OOB Score: {self.model.oob_score_:.4f}")
+
+        conf_matrix, metrics = self.compute_confusion_matrix()
+
+        return grid_search_rf.best_params_, conf_matrix, metrics
         
 
     def run_all_configurations(self):
@@ -289,16 +321,18 @@ class RandomForest_classifier:
             results.append((params, conf_matrix, metrics))
 
         if isinstance(self.param_configs, list):
-            best_parameters = self.tune_hyperparameter()
+            best_parameters, best_conf_matrix, best_metrics = self.tune_hyperparameter()
+            results.append((best_parameters, best_conf_matrix, best_metrics))
 
-        return results, best_parameters
+        return results
 
 
 if __name__ == "__main__":
 
     # Import data and files of parameters
     csv_path = Path(__file__).resolve().with_name("tess_data.csv")
+    config = {"dataset_path": csv_path}
 
     # Initialize Random Forest Classifier and call this method
-    rf_classifier = RandomForest_classifier(csv_path=csv_path)
+    rf_classifier = RandomForest_classifier(config=config)
     results_all = rf_classifier.run_all_configurations()

@@ -54,6 +54,9 @@ daneel --transit
 # Run exoplanet detection with a given config and save the plot
 daneel -i examples/params.yaml -t -o
 
+# Run exoplanet detection through a Random Forest classifier
+daneel -i examples/RF_parameters.yaml -d rf
+
 ```
 
 ## Input File Format

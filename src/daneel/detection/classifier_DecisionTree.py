@@ -11,7 +11,7 @@ from sklearn.metrics import (
     confusion_matrix, classification_report, accuracy_score,
     roc_auc_score, roc_curve
 )
-
+from sklearn.model_selection import GridSearchCV
 
 from .dataset import DataSetCreation
 
@@ -51,9 +51,10 @@ class DecisionTree_classifier:
         # Define default hyperparameters and update them if other input hyperparameters are given
         default_params = {
             #'splitter': best,
-            'max_depth': 15,
-            'min_samples_split': 2,
-            'max_features': 'sqrt', 
+            'max_depth': 10,
+            'min_samples_split': 10,
+            'min_samples_leaf': 5,
+            'max_features': None, 
             'class_weight': None,
             'random_state': RANDOM_STATE
             }
@@ -95,6 +96,11 @@ class DecisionTree_classifier:
     def train_model(self):
         """Fit the Decision Tree classifier on the balanced training set."""
         self.model.fit(self.X_train, self.y_train)
+
+        # Print the depth of the tree and the number of leaves obtained through the fit
+        print(f"Tree depth: {self.model.get_depth()}")
+        print(f"Number of leaves: {self.model.get_n_leaves()}")
+
         return self
 
     def evaluate_with_optimal_threshold(self, save_model=False, model_prefix="tess_dt_model"):
@@ -190,7 +196,7 @@ class DecisionTree_classifier:
         print(f"Confusion Matrix @ threshold {threshold:.3f})")
         print(cm_df)
 
-        # Plot the confusion matrix and eventually save it save as a .png file
+        # Plot the confusion matrix and save it to a path if given
         fig = plt.figure(figsize=(6, 5))
         ax = plt.gca()
         im = ax.imshow(cm, interpolation='nearest')
@@ -212,26 +218,111 @@ class DecisionTree_classifier:
         if save_path is not None:
             plt.savefig(save_path, dpi=300)
             print(f"Confusion matrix plot saved to: {save_path}")  
-        plt.show()
+        plt.close()
 
         return cm, metrics
 
-    def plot_decision_tree(self):
+    def plot_decision_tree(self, save_path=None):
+        """Plot the decision tree and eventually save the resulting image.
+                
+                Parameters 
+                ----------
+                save_path : str or path-like, optional
+                    File path to save the decision tree plot. If None, the plot is not saved (default None).
+        """
+        print(" ")
 
-
+        # Plot the decision tree and save it to a path if given
         plt.figure(figsize=(40, 20), dpi=600)
 
         plot_tree(
         self.model, 
         feature_names=self.feature_names, 
         class_names=['Non-Planet', 'Planet'],
-        max_depth=3, 
+        max_depth=None, 
         filled=True, 
         fontsize=6
         )
 
-        plt.savefig('decision_tree.pdf', bbox_inches='tight')
-        plt.show()
+        if save_path is not None:
+                    plt.savefig(save_path, bbox_inches='tight')
+                    print(f"Decision tree plot saved to: {save_path}")  
+        plt.close()
+
+    def tune_hyperparameter(self, input_cv=3, input_scoring='accuracy'):
+        """
+        Perform exhaustive Grid Search hyperparameter tuning and evaluate the optimal model. Extracts unique 
+        values for 'max_depth', 'min_samples_split', 'min_samples_leaf', and 'max_features' from `the list of 
+        hyperparameters' sets provided as input to construct a parameter grid, evaluates all combinations via 
+        cross-validation on the train dataset, updates 'self.model' to the optimal estimator, and computes its 
+        confusion matrix and optimal classification threshold metrics on the test set.
+
+        Parameters
+        ----------
+        input_cv : int, optional
+            Determines the cross-validation splitting strategy passed to sklearn.model_selection.GridSearchCV
+            (default is 3).
+        input_scoring : str or callable, optional
+            Strategy to evaluate the performance of the cross-validated model on the validation set (default 
+            is 'accuracy').
+
+        Returns
+        -------
+        best_params : dict or None
+            Dictionary mapping the tuned hyperparameter names to the values that achieved the best 
+            cross-validation score, or None if tuning could not be performed.
+        conf_matrix : numpy.ndarray of shape (2, 2) or None
+            Confusion matrix computed on self.y_test for the optimal estimator using Youden's J optimal 
+            threshold, or None if tuning was skipped.
+        metrics : tuple of (numpy.ndarray, float) or None
+            Tuple containing predicted positive-class probabilities and the optimal decision threshold for 
+            the best estimator, or None if tuning was skipped.
+        """
+        print(" ")
+        print("HYPERPARAMETERS TUNING")
+
+        # Check that hyperparameter tuning can be performed
+        if not isinstance(self.param_configs, list) or len(self.param_configs) <= 1:
+            print("Optimization of hyperparameters cannot be performed unless a list of different combinations is provided.")
+            return None, None, None
+
+        # Select and extract target parameters to be tuned
+        target_keys = {'max_depth', 'min_samples_split','min_samples_leaf', 'max_features'}
+        param_grid = {}
+        for d in self.param_configs:  # Loop over hyperparameters dictionaries
+            for k, v in d.items():
+                if k in target_keys:
+                    if k not in param_grid:
+                        param_grid[k] = []
+                    if v not in param_grid[k]:
+                        param_grid[k].append(v)
+        
+        # Check that the grid actually contains multiple choices for optimization
+        total_combinations = 1
+        for values in param_grid.values():
+            total_combinations *= len(values)
+        if total_combinations <= 1:
+            print("Optimization of hyperparameters cannot be performed provided configurations do not create multiple combinations for the target parameters.")
+            return None, None, None
+
+        # Perform hyperparameter tuning using Grid Search
+        dt = DecisionTreeClassifier(random_state=RANDOM_STATE)
+        grid_search_dt = GridSearchCV(
+            estimator=dt,
+            param_grid=param_grid,
+            cv=input_cv,
+            scoring=input_scoring,
+            return_train_score=True)
+
+        grid_search_dt.fit(self.X_train, self.y_train)
+        print(f"Best parameters: {grid_search_dt.best_params_}")
+
+        # Update the model to the optimal one and compute all statistics
+        self.model = grid_search_dt.best_estimator_
+
+        conf_matrix, metrics = self.compute_confusion_matrix()
+
+        return grid_search_dt.best_params_, conf_matrix, metrics
 
     def run_all_configurations(self):
         """
@@ -258,35 +349,34 @@ class DecisionTree_classifier:
 
         return results
 
-
-#if __name__ == "__main__":
-
-    # Import data and files of parameters
-#    csv_path = Path(__file__).resolve().with_name("tess_data.csv")
-
-    # Initialize Decision Tree classifier and call this method
- #   dt_classifier = DecisionTree_classifier(csv_path=csv_path)
-  #  results_all = dt_classifier.run_all_configurations()
-
-
+    
 if __name__ == "__main__":
 
-    config = {
-        "dataset_path": str(
-            Path(__file__).resolve().with_name("tess_data.csv")
-        ),
+    import yaml
 
-        "DT_params": {
-            "max_depth": 10,
-            "min_samples_leaf": 5,
-            "max_features": None
-        }
-    }
+    yaml_path = (Path(__file__).resolve().with_name("parameters_dt.yaml"))
+
+    with open(yaml_path, "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
 
     dt_classifier = DecisionTree_classifier(config)
+    dt_classifier.run_all_configurations()
+    dt_classifier.tune_hyperparameter(input_cv=3)
 
-    dt_classifier.train_model()
-
-    dt_classifier.compute_confusion_matrix()
-
-    dt_classifier.plot_decision_tree()
+# ------------------------------------------------------------------
+# Notes
+# ------------------------------------------------------------------
+#
+# On headless systems, WSL environments, or machines without a
+# properly configured graphical backend, matplotlib may raise
+# Qt-related visualization errors when generating figures.
+#
+# In such cases, the module can be executed with a non-interactive
+# backend:
+#
+#     MPLBACKEND=Agg python -m daneel.detection.classifier_DecisionTree
+#
+# This allows confusion matrices and decision-tree plots to be
+# generated and saved without opening graphical windows.
+#
+# ------------------------------------------------------------------

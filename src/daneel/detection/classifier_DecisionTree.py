@@ -51,10 +51,9 @@ class DecisionTree_classifier:
         # Define default hyperparameters and update them if other input hyperparameters are given
         default_params = {
             #'splitter': best,
-            'max_depth': None,
+            'max_depth': 15,
             'min_samples_split': 2,
             'max_features': 'sqrt', 
-            # sqrt to set the same as Random Forest, None to set as standard sklearn DTC (in RFC this hyperparam was set to standard sklearn)
             'class_weight': None,
             'random_state': RANDOM_STATE
             }
@@ -89,7 +88,7 @@ class DecisionTree_classifier:
         self.X_train, self.X_test, self.y_train, self.y_test, self.meta, self.X_test_raw, self.X_err, self.scaler = loader.load_data()
         
         # Extract names of the features, to use in the plot_decision_tree function
-        self.feature_names = [f"flux_{i:04d}" for i in range(X_train.shape[1])]
+        self.feature_names = [f"flux_{i:04d}" for i in range(self.X_train.shape[1])]
 
         return self.X_train, self.X_test, self.y_train, self.y_test, self.meta, self.X_test_raw, self.X_err, self.scaler
 
@@ -224,7 +223,7 @@ class DecisionTree_classifier:
 
         plot_tree(
         self.model, 
-        feature_names=[self.feature_names], 
+        feature_names=self.feature_names, 
         class_names=['Non-Planet', 'Planet'],
         max_depth=3, 
         filled=True, 
@@ -232,8 +231,7 @@ class DecisionTree_classifier:
         )
 
         plt.savefig('decision_tree.pdf', bbox_inches='tight')
-        
-    plt.show()
+        plt.show()
 
     def run_all_configurations(self):
         """
@@ -261,11 +259,34 @@ class DecisionTree_classifier:
         return results
 
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
 
     # Import data and files of parameters
-    csv_path = Path(__file__).resolve().with_name("tess_data.csv")
+#    csv_path = Path(__file__).resolve().with_name("tess_data.csv")
 
     # Initialize Decision Tree classifier and call this method
-    dt_classifier = DecisionTree_classifier(csv_path=csv_path)
-    results_all = dt_classifier.run_all_configurations()
+ #   dt_classifier = DecisionTree_classifier(csv_path=csv_path)
+  #  results_all = dt_classifier.run_all_configurations()
+
+
+if __name__ == "__main__":
+
+    config = {
+        "dataset_path": str(
+            Path(__file__).resolve().with_name("tess_data.csv")
+        ),
+
+        "DT_params": {
+            "max_depth": 10,
+            "min_samples_leaf": 5,
+            "max_features": None
+        }
+    }
+
+    dt_classifier = DecisionTree_classifier(config)
+
+    dt_classifier.train_model()
+
+    dt_classifier.compute_confusion_matrix()
+
+    dt_classifier.plot_decision_tree()

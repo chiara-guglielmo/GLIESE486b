@@ -1,0 +1,14 @@
+dataset_path: "/home/angyp/CompAstro_Project/tess_data.csv"
+
+device: None
+
+CNN_params:
+  - conv_filters: [16,32]
+    kernel_size: 5
+    pooling_size: 2
+    dropout_rates_1: [0.2, 0.2]
+    dropout_rates_2: [0.3]
+    hidden_dims: [32]
+    learning_rate: 0.001
+    batch_size: 32
+    epochs: 10

@@ -7,10 +7,7 @@ import joblib
 
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import plot_tree
-from sklearn.metrics import (
-    confusion_matrix, classification_report, accuracy_score,
-    roc_auc_score, roc_curve
-)
+from sklearn.metrics import (confusion_matrix, classification_report, accuracy_score, roc_auc_score, roc_curve)
 from sklearn.model_selection import GridSearchCV
 
 from .dataset import DataSetCreation
@@ -235,14 +232,8 @@ class DecisionTree_classifier:
         # Plot the decision tree and save it to a path if given
         plt.figure(figsize=(40, 20), dpi=600)
 
-        plot_tree(
-        self.model, 
-        feature_names=self.feature_names, 
-        class_names=['Non-Planet', 'Planet'],
-        max_depth=None, 
-        filled=True, 
-        fontsize=6
-        )
+        plot_tree(self.model, feature_names=self.feature_names, class_names=['Non-Planet', 'Planet'], max_depth=None, filled=True, 
+        fontsize=6)
 
         if save_path is not None:
                     plt.savefig(save_path, bbox_inches='tight')

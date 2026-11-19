@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+import gc
 
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, roc_auc_score, roc_curve
 import torch
@@ -10,14 +11,14 @@ import torch.nn as nn
 from torchinfo import summary
 from torch.utils.data import DataLoader
 
-from dataset import DataSetCreation
+from .dataset import DataSetCreation
 
 # Reproducibility
 RANDOM_STATE = 42
 np.random.seed(RANDOM_STATE)
 
 class CNN_classifier:
-    """Class implementing Convolutional Neural Network classifier supporting single or multiple hyperparameter sets."""
+    """..."""
 
     def __init__(self, config):
         """
@@ -104,7 +105,7 @@ class CNN_classifier:
         dropout_rates = config_params['dropout_rates_1']
         dropout_rates2 = config_params['dropout_rates_2']
         hidden_dims = config_params['hidden_dims']
-        learning_rate = config_params['learning_rate']
+        learning_rate = float(config_params['learning_rate'])
         batch_size = config_params['batch_size']
 
         # Extracts automatically input channels from the loaded trained dataset
@@ -199,34 +200,37 @@ class CNN_classifier:
 
         return validation_loss
 
-    def accuracy_per_epoch(self, data_loader):
-        """..."""
+    def predict_probabilities(self, data_loader):
+        """...."""
 
         self.model.eval()  # Validation/Test mode
-        correct = 0
-        total = 0
+        probs, labels = [], []
 
         with torch.no_grad():
             for batch_X, batch_y in data_loader:
                 batch_X = batch_X.to(self.device)
                 batch_y = batch_y.to(self.device).float().unsqueeze(1)
+                batch_probs = torch.sigmoid(self.model(batch_X))
+                probs.append(batch_probs.cpu().numpy())
+                labels.append(batch_y.cpu().numpy())
 
-                outputs = self.model(batch_X)
-                probabilities = torch.sigmoid(outputs)
-                predictions = (probabilities >= 0.5).float()
+        probability = np.concatenate(probs).ravel()
+        y_true = np.concatenate(labels).ravel().astype(int)
+        return probability, y_true
 
-                correct += (predictions == batch_y).sum().item()
-                total += batch_y.numel()
+    def accuracy_per_epoch(self, data_loader, threshold=0.5):
+        """...."""
 
-        return correct / total
-
+        probability, y_true = self.predict_probabilities(data_loader)
+        y_pred = (probability >= threshold).astype(int)
+        return float(accuracy_score(y_true, y_pred))
 
     def train_model(self, config_params=None):
         """
         ...
         """
-        print(" ")
-        print("TRAINING PHASE")
+
+        print("TRAINING")
 
         # Fall back to the first configuration if None is provided
         if config_params is None:
@@ -256,7 +260,7 @@ class CNN_classifier:
             train_accuracy_history.append(train_acc)    
             val_accuracy_history.append(val_acc)        
             
-            print(f"Epoch {epoch + 1}/{epochs}: Train Loss = {train_loss:.4f}, Validation Loss = {val_loss:.4f}")
+            print(f"Epoch {epoch + 1}/{epochs}: Train Loss = {train_loss:.4f}, Validation Loss = {val_loss:.4f}, | Train accuracy = {train_acc:.4f}, Validation accuracy = {val_acc:.4f}")
 
         print('Finished Training')
 
@@ -281,10 +285,110 @@ class CNN_classifier:
 
         return train_loss_history, val_loss_history, train_accuracy_history, val_accuracy_history
 
+    def evaluate_optimal_threshold(self, data_loader, threshold=None, verbose=True):
+        """...."""
 
-    #def evaluate_with_optimal_threshold():
+        probability, y_true = self.predict_probabilities(data_loader)
 
-    #def compute_confusion_matrix():
+        fpr, tpr, thresholds = roc_curve(y_true, probability)
+        j_scores = tpr - fpr
+        optimal_idx = int(np.argmax(j_scores))
+        optimal_threshold = float(thresholds[optimal_idx])
+
+        active_threshold = optimal_threshold if threshold is None else float(threshold)
+        y_pred = (probability >= active_threshold).astype(int)
+        y_pred_default = (probability >= 0.5).astype(int)
+
+        acc_active = float(accuracy_score(y_true, y_pred))
+        acc_default = float(accuracy_score(y_true, y_pred_default))
+        auc = float(roc_auc_score(y_true, probability))
+
+        if verbose:
+            print("\nTHRESHOLD OPTIMIZATION AND EVALUATION")
+            print(f"Optimal threshold (Youden's J): {optimal_threshold:.4f} (default=0.5)")
+            print(f"Evaluated threshold: {active_threshold:.4f}")
+            print(f"At optimal threshold: TPR={tpr[optimal_idx]:.4f}, FPR={fpr[optimal_idx]:.4f}")
+            print(f"AUC-ROC: {auc:.4f}")
+            print(f"Accuracy (default=0.5): {acc_default:.4f} ({acc_default*100:.2f}%)")
+            print(f"Accuracy (threshold={active_threshold:.4f}): {acc_active:.4f} ({acc_active*100:.2f}%)")
+            print("\nClassification report:")
+            print(classification_report(y_true, y_pred, target_names=['Non-Planet', 'Planet'], digits=4, zero_division=0))
+            print("Prediction distribution:")
+            print(f"  Predicted 0: {(y_pred == 0).sum()}")
+            print(f"  Predicted 1: {(y_pred == 1).sum()}")
+            print("True distribution:")
+            print(f"  True 0: {(y_true == 0).sum()}")
+            print(f"  True 1: {(y_true == 1).sum()}")
+
+        return y_pred, probability, active_threshold
+
+    def compute_confusion_matrix(self, y_true, y_pred, threshold, save_path=None):
+        """
+        ...
+        """
+
+        # Compute the confusion matrix using the scikit learn confusion_matrix function and print it
+        cm = confusion_matrix(y_true, y_pred)
+        cm_df = pd.DataFrame(cm, 
+                             index=['Actual: Non-Planet', 'Actual: Planet'], 
+                             columns=['Pred: Non-Planet', 'Pred: Planet']
+                             )
+        print("\nCONFUSION MATRIX EVALUATION")
+        print(f"Confusion Matrix @ threshold {threshold:.3f})")
+        print(cm_df)
+
+        # Plot the confusion matrix and eventually save it as a file
+        fig = plt.figure(figsize=(6, 5))
+        ax = plt.gca()
+        im = ax.imshow(cm, interpolation='nearest')
+        ax.figure.colorbar(im, ax=ax)
+        ax.set(xticks=np.arange(2),
+            yticks=np.arange(2),
+            xticklabels=['Non-Planet', 'Planet'],
+            yticklabels=['Non-Planet', 'Planet'],
+            xlabel='Predicted', ylabel='True',
+            title=f'Confusion Matrix (threshold={threshold:.3f})')
+        total = cm.sum()
+        for i in range(cm.shape[0]):
+         for j in range(cm.shape[1]):
+                count = cm[i, j]
+                pct = (count / total * 100) if total > 0 else 0.0
+                ax.text(j, i, f"{count}\n({pct:.1f}%)", ha='center', va='center')
+        plt.tight_layout()
+
+        if save_path is not None:
+            plt.savefig(save_path, dpi=300)
+            print(f"Confusion matrix plot saved to: {save_path}")  
+        plt.show()
+        plt.close(fig)
+        gc.collect()
+
+        return cm
+
+    def test_model(self, config_params=None):
+        """
+        ...
+        """
+
+        # Fall back to the first configuration if None is provided
+        if config_params is None:
+            config_params = self.param_configs[0]
+                
+        # Extract network parameters
+        batch_size = config_params['batch_size']
+
+        # Find optimal threshold on validation set
+        validation_loader = DataLoader(self.validation, batch_size=batch_size, shuffle=False)
+        _, _, optimal_threshold = self.evaluate_optimal_threshold(validation_loader, verbose=False)
+
+        # Apply optimal threshold to the test set
+        test_loader = DataLoader(self.test, batch_size=batch_size, shuffle=False)
+        prob_test, y_true = self.predict_probabilities(test_loader)
+        y_pred_test, prob_test, optimal_threshold = self.evaluate_optimal_threshold(test_loader, threshold=optimal_threshold)
+        metrics_test = prob_test, optimal_threshold
+        cm = self.compute_confusion_matrix(y_true, y_pred_test, optimal_threshold)
+
+        return cm, metrics_test
 
     def run_all_configurations(self):
         """
@@ -293,7 +397,7 @@ class CNN_classifier:
         Returns
         -------
         results : list of tuples
-            A list where each element contains a tuple of `(params, conf_matrix, metrics)` for each evaluated 
+            A list where each element contains a tuple of '(params, conf_matrix, metrics)' for each evaluated 
             hyperparameter configuration.
          """
         
@@ -306,11 +410,10 @@ class CNN_classifier:
             # Re-initialize the model with this specific configuration of hyperparameters
             self.model, self.optimizer, self.loss_function = self.build_cnn(params)
             self.train_model(params)
-            #conf_matrix, metrics = self.compute_confusion_matrix()
-            #results.append((params, conf_matrix, metrics))
+            conf_matrix, metrics = self.test_model(params)
+            results.append((params, conf_matrix, metrics))
     
-        
-        return None
+        return results
 
 if __name__ == "__main__":
 

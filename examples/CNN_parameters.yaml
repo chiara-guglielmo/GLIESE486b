@@ -1,6 +1,6 @@
 dataset_path: "/home/angyp/CompAstro_Project/tess_data.csv"
 
-device: None
+device: null
 
 CNN_params:
   - conv_filters: [32,64,128]

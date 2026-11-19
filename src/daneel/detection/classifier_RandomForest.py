@@ -304,7 +304,7 @@ class RandomForest_classifier:
         Returns
         -------
         results : list of tuples
-            A list where each element contains a tuple of `(params, conf_matrix, metrics)` for each evaluated 
+            A list where each element contains a tuple of '(params, conf_matrix, metrics)' for each evaluated 
             hyperparameter configuration.
         """
 

@@ -3,6 +3,7 @@ import yaml
 from .detection.dataset import DataSetCreation
 from .detection.transit import transit
 from .detection.classifier_RandomForest import RandomForest_classifier
+from .detection.classifier_CNN import CNN_classifier
 from .parameters.parameters import Parameters
 
 def main():
@@ -12,7 +13,7 @@ def main():
 
     parser.add_argument("-i", "--input", nargs="+", type=str, default=None, help="Paths to the YAML configuration files")
 
-    parser.add_argument("-d", "--detection", choices=["rf"], help="Run exoplanet detection through a Random Forest classifier")
+    parser.add_argument("-d", "--detection", choices=["rf", "cnn"], default=None, help="Run exoplanet detection through Random Forest classifier ('rf') or CNN ('cnn')")
 
     parser.add_argument("-o", "--output", action="store_true", help="Save the transit plot in the current working directory")
 
@@ -49,8 +50,20 @@ def main():
                 "model_prefix": parameters.get("model_prefix", "tess_rf_model"),
                 "save_path": args.output if args.output else parameters.get("save_path", None)
                 }
-
         RandomForest_classifier(config).run_all_configurations()
+
+    # Handle detection through CNN
+    if args.detection == "cnn":
+        if args.input is not None:
+
+            yaml_file = args.input[0] if isinstance(args.input, list) else args.input
+            parameters = Parameters(yaml_file)
+            config = {
+                "dataset_path": parameters.get("dataset_path"),
+                "device": parameters.get("device", None),
+                "CNN_params": parameters.get("CNN_params"),
+                }
+        CNN_classifier(config).run_all_configurations()
 
 if __name__ == "__main__":
     main()

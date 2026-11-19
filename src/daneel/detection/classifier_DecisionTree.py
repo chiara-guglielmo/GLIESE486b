@@ -339,15 +339,12 @@ class DecisionTree_classifier:
             results.append((params, conf_matrix, metrics))
 
         return results
-
     
 if __name__ == "__main__":
 
     import yaml
 
-    yaml_path = (Path(__file__).resolve().with_name("parameters_dt.yaml"))
-
-    with open(yaml_path, "r", encoding="utf-8") as f:
+    yaml_path = Path(__file__).resolve().parents[3] / "examples" / "DF_parameters.yaml" with open(yaml_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     dt_classifier = DecisionTree_classifier(config)

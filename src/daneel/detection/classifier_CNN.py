@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 from torchinfo import summary
 from torch.utils.data import DataLoader
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from .dataset import DataSetCreation
 
@@ -17,12 +18,29 @@ from .dataset import DataSetCreation
 RANDOM_STATE = 42
 np.random.seed(RANDOM_STATE)
 
+# Definition of a class implementing CNN classifier
 class CNN_classifier:
-    """..."""
+    """Class implementing CNN classifier supporting single or multiple hyperparameter sets."""
 
     def __init__(self, config):
         """
-        ...
+        Initialize the CNN classifier configuration and load the dataset.
+
+        Parameters
+        ----------
+        config : dict
+            Configuration dictionary loaded from the YAML parameters file, containing:
+            - dataset_path : str or path-like
+                Path to the input CSV file containing the data. Required.
+            - device : str, optional
+                Computer deviced to be used to run the classifier (default is none, which uses the 
+                available device among 'cuda:0', 'mps' or evenually 'cpu').
+            - CNN_params : dict or list of dict, optional
+                Hyperparameters for the CNN classifier. If a dictionary is provided, 
+                it contains a single configuration. If a list of dictionaries is provided, 
+                multiple configurations will be evaluated (default is None, which uses default 
+                hyperparameters).
+        
         """
 
         self.config = config
@@ -82,7 +100,7 @@ class CNN_classifier:
 
         # Initialize the PyTorch CNN model with the first configuration and send it to the available device
         self.load_data()
-        self.model, self.optimizer, self.loss_function = self.build_cnn(self.param_configs[0])
+        self.model, self.optimizer, self.scheduler, self.loss_function = self.build_cnn(self.param_configs[0])
 
     def load_data(self):
         """Load data properly formatted by calling the DataSetCreation class from dataset.py in "deep_learning" mode."""
@@ -91,7 +109,52 @@ class CNN_classifier:
         return self.train, self.test, self.validation
 
     def build_cnn(self, config_params=None):
-        """..."""
+        """
+        Build the 1D CNN architecture, optimizer, learning rate scheduler, and loss function. Constructs a sequential 
+        1D convolutional feature extractor (Conv1d, BatchNorm1d, ReLU, MaxPool1d, Dropout, and AdaptiveAvgPool1d) followed 
+        by a dense classification head for binary classification, and moves the model to 'self.device'.
+
+        Parameters
+        ----------
+        config_params : dict, optional
+            Hyperparameter dictionary for the network. If None, defaults to 'self.param_configs[0]'. It contains:
+            - 'conv_filters' : list of int
+                Number of output channels for each 1D convolutional block.
+            - 'kernel_size' : int
+                Kernel size used in each 1D convolutional layer.
+            - 'pooling_size' : int
+                Window size used in each 1D max-pooling layer.
+            - 'pooling_output_size' : int
+                Target sequence length produced by AdaptiveAvgPool1d.
+            - 'dropout_rates_1' : list of float
+                Dropout probabilities after each convolutional block.
+            - 'dropout_rates_2' : list of float
+                Dropout probabilities after each hidden dense layer.
+            - 'hidden_dims' : list of int
+                Number of units in each hidden dense layer of the classification head.
+            - 'learning_rate' : float
+                Initial learning rate for the Adam optimizer.
+            - 'batch_size' : int
+                Mini-batch size used during training and evaluation.
+            - 'epochs' : int
+                Number of training epochs.
+        
+        Returns
+        -------
+        model : torch.nn.Sequential
+            The assembled CNN model placed on 'self.device'.
+        optimizer : torch.optim.Adam
+            Adam optimizer initialized with the model's parameters and configured learning rate.
+        scheduler : torch.optim.lr_scheduler.ReduceLROnPlateau
+            Learning rate scheduler configured to monitor a maximization metric.
+        loss_function : torch.nn.BCEWithLogitsLoss
+            Binary cross-entropy loss function with logits.
+
+        Notes
+        -----
+        In order for the program to work, the lists 'conv_filters' and 'dropout_rates_1', 'hidden_dims' and 'dropout_rates_2'
+        must have the same number of elements, since a dropout rate for each convolutional block or hidden dense layer is required.
+        """
 
         # Fall back to the first configuration if None is provided
         if config_params is None:
@@ -150,15 +213,29 @@ class CNN_classifier:
         # MODEL, OPTIMIZER AND LOSS FUNCTION DEFINITION
         self.model = nn.Sequential(self.features, self.classifier).to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
+        self.scheduler = ReduceLROnPlateau(self.optimizer, mode='max', factor=0.5, patience=8, min_lr=1e-7)
         self.loss_function = nn.BCEWithLogitsLoss()
 
         # Print a summary of the defined network
         #print(summary(self.model, input_size=(batch_size, sample_x.shape[0], sample_x.shape[1]), col_names=("output_size", "num_params"), depth=3))
 
-        return self.model, self.optimizer, self.loss_function
+        return self.model, self.optimizer, self.scheduler, self.loss_function
     
     def train_per_epoch(self, train_loader):
-        """..."""
+        """
+        Run one training epoch over the training DataLoader. It iterates through mini-batches, performs forward 
+        and backward passes, updates model weights, and computes the average training loss.
+
+        Parameters
+        ----------
+        train_loader : torch.utils.data.DataLoader
+            DataLoader providing training feature tensors and binary labels.
+
+        Returns
+        -------
+        train_loss : float
+            Mean training loss across all samples in 'self.train'.
+        """
 
         self.model.train()  # Training/Learning mode
         train_running_loss = 0.0
@@ -181,7 +258,20 @@ class CNN_classifier:
         return train_loss
     
     def validate_per_epoch(self, validation_loader):
-        """..."""
+        """
+        Evaluate the model on the validation set for one epoch without gradient updates and compute the average 
+        validation loss across all validation samples.
+
+        Parameters
+        ----------
+        validation_loader : torch.utils.data.DataLoader
+            DataLoader providing validation feature tensors and binary labels.
+
+        Returns
+        -------
+        validation_loss : float
+            Mean validation loss across all samples in 'self.validation'.
+        """
 
         self.model.eval()  # Validation/Test mode
         validation_running_loss = 0.0
@@ -192,7 +282,8 @@ class CNN_classifier:
                 # Prepare inputs and layers
                 batch_X = batch_X.to(self.device)
                 batch_y = batch_y.to(self.device).float().unsqueeze(1)
-        
+
+                # Compute loss function
                 loss = self.loss_function(self.model(batch_X), batch_y)
                 validation_running_loss += loss.item() * batch_X.size(0)
         
@@ -201,7 +292,21 @@ class CNN_classifier:
         return validation_loss
 
     def predict_probabilities(self, data_loader):
-        """...."""
+        """
+        Compute predicted class probabilities and true binary labels for a certain dataset.
+
+        Parameters
+        ----------
+        data_loader : torch.utils.data.DataLoader
+            DataLoader providing input batches and binary target labels.
+
+        Returns
+        -------
+        probability : numpy.ndarray of shape (len(data_loader.dataset),)
+            1D array of predicted probabilities for the positive class.
+        y_true : numpy.ndarray of shape (len(data_loader.dataset),)
+            1D integer array of true binary labels.
+        """
 
         self.model.eval()  # Validation/Test mode
         probs, labels = [], []
@@ -219,7 +324,21 @@ class CNN_classifier:
         return probability, y_true
 
     def accuracy_per_epoch(self, data_loader, threshold=0.5):
-        """...."""
+        """
+        Compute classification accuracy on a DataLoader at a given probability threshold.
+
+        Parameters
+        ----------
+        data_loader : torch.utils.data.DataLoader
+            DataLoader providing input batches and binary target labels.
+        threshold : float, optional
+            Probability cutoff above which predictions are assigned to "class 1" (default is 0.5).
+
+        Returns
+        -------
+        accuracy : float
+            Classification accuracy score in the range [0.0, 1.0].
+        """
 
         probability, y_true = self.predict_probabilities(data_loader)
         y_pred = (probability >= threshold).astype(int)
@@ -227,7 +346,23 @@ class CNN_classifier:
 
     def train_model(self, config_params=None):
         """
-        ...
+        Train the CNN model across all configured epochs and plot loss and accuracy curves.
+
+        Parameters
+        ----------
+        config_params : dict, optional
+            Hyperparameter dictionary for the network. If None, defaults to 'self.param_configs[0]'.
+
+        Returns
+        -------
+        train_loss_history : list of floats
+            Training loss recorded at each epoch.
+        val_loss_history : list of floats
+            Validation loss recorded at each epoch.
+        train_accuracy_history : list of floats
+            Training accuracy recorded at each epoch.
+        val_accuracy_history : list of floats
+            Validation accuracy recorded at each epoch.
         """
 
         print("TRAINING")
@@ -254,6 +389,11 @@ class CNN_classifier:
             val_loss = self.validate_per_epoch(validation_loader)
             train_acc = self.accuracy_per_epoch(train_loader)
             val_acc = self.accuracy_per_epoch(validation_loader)
+
+            # Compute validation ROC-AUC for ReduceLROnPlateau
+            val_probs, val_true = self.predict_probabilities(validation_loader)
+            val_auc = float(roc_auc_score(val_true, val_probs))
+            self.scheduler.step(val_auc)
 
             train_loss_history.append(train_loss)
             val_loss_history.append(val_loss)
@@ -286,23 +426,50 @@ class CNN_classifier:
         return train_loss_history, val_loss_history, train_accuracy_history, val_accuracy_history
 
     def evaluate_optimal_threshold(self, data_loader, threshold=None, verbose=True):
-        """...."""
+        """
+        Evaluate the classification model's performances on a test dataset and dynamically calculates an optimal threshold using 
+        Youden's J statistic (derived from the ROC curve) to achieve the best possible balance between True Positive Rate (TPR) and 
+        False Positive Rate (FPR).
 
+        Parameters
+        ----------
+        data_loader : torch.utils.data.DataLoader
+            DataLoader providing input batches and binary target labels.
+        threshold : float, optional
+            Probability cutoff above which predictions are assigned to "class 1" (default is 0.5).
+        verbose : bool, optional
+            Whether to print threshold statistics, ROC-AUC, accuracy, classification report,
+            and class distributions (default is True).       
+
+        Returns
+        -------
+        y_pred : numpy.ndarray of shape (len(data_loader.dataset),)
+            Binary class predictions computed using the optimal threshold.
+        probability : numpy.ndarray of shape (len(data_loader.dataset),)
+            Predicted probabilities for the positive class (Planet).
+        active_threshold : float
+            The classification threshold applied to produce 'y_pred' (either the provided 'threshold' or the optimal threshold 
+            from Youden's J statistic).
+        """
+
+        # Compute the model's probability that each test sample is a planet, and get the true label
         probability, y_true = self.predict_probabilities(data_loader)
 
+        # Get False Positive Rates (FPR) and True Positive Rates (TPR) and calculate Youden's J statistic to find the optimal balance
         fpr, tpr, thresholds = roc_curve(y_true, probability)
         j_scores = tpr - fpr
         optimal_idx = int(np.argmax(j_scores))
         optimal_threshold = float(thresholds[optimal_idx])
 
+        # Compare predictions with default and optimal thresholds
         active_threshold = optimal_threshold if threshold is None else float(threshold)
         y_pred = (probability >= active_threshold).astype(int)
         y_pred_default = (probability >= 0.5).astype(int)
-
         acc_active = float(accuracy_score(y_true, y_pred))
         acc_default = float(accuracy_score(y_true, y_pred_default))
         auc = float(roc_auc_score(y_true, probability))
 
+        # Print the classification report at the optimal threshold (if verbose=True)
         if verbose:
             print("\nTHRESHOLD OPTIMIZATION AND EVALUATION")
             print(f"Optimal threshold (Youden's J): {optimal_threshold:.4f} (default=0.5)")
@@ -324,7 +491,23 @@ class CNN_classifier:
 
     def compute_confusion_matrix(self, y_true, y_pred, threshold, save_path=None):
         """
-        ...
+        Evaluate, print and plot the confusion matrix and eventually save the resulting image.
+        
+        Parameters 
+        ----------
+        y_true : array-like
+            True binary labels.
+        y_pred : array-like
+            Predicted binary labels.
+        threshold : float
+            Classification threshold associated with 'y_pred', used for display titles.
+        save_path : str or path-like, optional
+            File path to save the confusion matrix plot. If None, the plot is not saved (default None).       
+
+        Returns
+        -------
+        cm: numpy.ndarray of shape (2,2)
+            Confusion matrix computed on y_test using Youden's J threshold.
         """
 
         # Compute the confusion matrix using the scikit learn confusion_matrix function and print it
@@ -334,7 +517,7 @@ class CNN_classifier:
                              columns=['Pred: Non-Planet', 'Pred: Planet']
                              )
         print("\nCONFUSION MATRIX EVALUATION")
-        print(f"Confusion Matrix @ threshold {threshold:.3f})")
+        print(f"Confusion Matrix @ threshold {threshold:.3f}")
         print(cm_df)
 
         # Plot the confusion matrix and eventually save it as a file
@@ -367,7 +550,21 @@ class CNN_classifier:
 
     def test_model(self, config_params=None):
         """
-        ...
+        Find an optimal threshold on the validation set (via Youden's J) and evaluate the model 
+        on the test set applying that threshold, and compute test evaluation metrics and test
+        confusion matrix.
+
+        Parameters
+        ----------
+        config_params : dict, optional
+            Hyperparameter dictionary for the network. If None, defaults to 'self.param_configs[0]'.
+
+        Returns
+        -------
+        cm: numpy.ndarray of shape (2,2)
+            Confusion matrix computed on the test using Youden's J threshold found on the validation set.  
+        metrics : tuple
+            A tuple containing the evaluation metrics (probability, threshold).
         """
 
         # Fall back to the first configuration if None is provided
@@ -408,7 +605,7 @@ class CNN_classifier:
             print(f" ")
                     
             # Re-initialize the model with this specific configuration of hyperparameters
-            self.model, self.optimizer, self.loss_function = self.build_cnn(params)
+            self.model, self.optimizer, self.scheduler, self.loss_function = self.build_cnn(params)
             self.train_model(params)
             conf_matrix, metrics = self.test_model(params)
             results.append((params, conf_matrix, metrics))

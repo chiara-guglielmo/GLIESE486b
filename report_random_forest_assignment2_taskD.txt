@@ -1,0 +1,130 @@
+==============================
+Running Configuration 1: {'n_estimators': 100, 'max_depth': 10, 'min_samples_leaf': 10, 'max_features': 'sqrt', 'bootstrap': True, 'class_weight': None, 'random_state': 42, 'n_jobs': -1, 'oob_score': True}
+
+OOB Score: 0.8129
+
+THRESHOLD OPTIMIZATION AND EVALUATION
+Optimal threshold: 0.5912 (default=0.5)
+At this threshold: TPR=0.8687, FPR=0.1828
+AUC-ROC: 0.8983
+Accuracy @0.5: 0.8229 (82.29%)
+Accuracy @0.5912: 0.8438 (84.38%)
+              precision    recall  f1-score   support
+
+  Non-Planet     0.8539    0.8172    0.8352        93
+      Planet     0.8350    0.8687    0.8515        99
+
+    accuracy                         0.8438       192
+   macro avg     0.8444    0.8429    0.8433       192
+weighted avg     0.8441    0.8438    0.8436       192
+
+CONFUSION MATRIX EVALUATION
+Confusion Matrix @ threshold 0.591)
+                    Pred: Non-Planet  Pred: Planet
+Actual: Non-Planet                76            17
+Actual: Planet                    13            86
+
+==============================
+Running Configuration 2: {'n_estimators': 1000, 'max_depth': 10, 'min_samples_leaf': 10, 'max_features': 'sqrt', 'bootstrap': True, 'class_weight': None, 'random_state': 42, 'n_jobs': -1, 'oob_score': True}
+
+OOB Score: 0.8129
+
+THRESHOLD OPTIMIZATION AND EVALUATION
+Optimal threshold: 0.5468 (default=0.5)
+At this threshold: TPR=0.8990, FPR=0.2473
+AUC-ROC: 0.8994
+Accuracy @0.5: 0.8281 (82.81%)
+Accuracy @0.5468: 0.8281 (82.81%)
+              precision    recall  f1-score   support
+
+  Non-Planet     0.8750    0.7527    0.8092        93
+      Planet     0.7946    0.8990    0.8436        99
+
+    accuracy                         0.8281       192
+   macro avg     0.8348    0.8258    0.8264       192
+weighted avg     0.8336    0.8281    0.8270       192
+
+CONFUSION MATRIX EVALUATION
+Confusion Matrix @ threshold 0.547)
+                    Pred: Non-Planet  Pred: Planet
+Actual: Non-Planet                70            23
+Actual: Planet                    10            89
+
+==============================
+Running Configuration 3: {'n_estimators': 100, 'max_depth': 1000, 'min_samples_leaf': 10, 'max_features': 'sqrt', 'bootstrap': True, 'class_weight': None, 'random_state': 42, 'n_jobs': -1, 'oob_score': True}
+
+OOB Score: 0.8100
+
+THRESHOLD OPTIMIZATION AND EVALUATION
+Optimal threshold: 0.5988 (default=0.5)
+At this threshold: TPR=0.8384, FPR=0.1828
+AUC-ROC: 0.8923
+Accuracy @0.5: 0.8073 (80.73%)
+Accuracy @0.5988: 0.8281 (82.81%)
+              precision    recall  f1-score   support
+
+  Non-Planet     0.8261    0.8172    0.8216        93
+      Planet     0.8300    0.8384    0.8342        99
+
+    accuracy                         0.8281       192
+   macro avg     0.8280    0.8278    0.8279       192
+weighted avg     0.8281    0.8281    0.8281       192
+
+CONFUSION MATRIX EVALUATION
+Confusion Matrix @ threshold 0.599)
+                    Pred: Non-Planet  Pred: Planet
+Actual: Non-Planet                76            17
+Actual: Planet                    16            83
+
+==============================
+Running Configuration 4: {'n_estimators': 1000, 'max_depth': 500, 'min_samples_leaf': 10, 'max_features': 'sqrt', 'bootstrap': True, 'class_weight': None, 'random_state': 42, 'n_jobs': -1, 'oob_score': True}
+
+OOB Score: 0.8143
+
+THRESHOLD OPTIMIZATION AND EVALUATION
+Optimal threshold: 0.4558 (default=0.5)
+At this threshold: TPR=0.9596, FPR=0.3011
+AUC-ROC: 0.8976
+Accuracy @0.5: 0.8281 (82.81%)
+Accuracy @0.4558: 0.8333 (83.33%)
+              precision    recall  f1-score   support
+
+  Non-Planet     0.9420    0.6989    0.8025        93
+      Planet     0.7724    0.9596    0.8559        99
+
+    accuracy                         0.8333       192
+   macro avg     0.8572    0.8293    0.8292       192
+weighted avg     0.8545    0.8333    0.8300       192
+
+CONFUSION MATRIX EVALUATION
+Confusion Matrix @ threshold 0.456)
+                    Pred: Non-Planet  Pred: Planet
+Actual: Non-Planet                65            28
+Actual: Planet                     4            95
+
+==============================
+
+HYPERPARAMETERS TUNING
+Best parameters: {'max_depth': 10, 'max_features': 'sqrt', 'min_samples_leaf': 10, 'n_estimators': 100}
+Optimal Model OOB Score: 0.8129
+
+THRESHOLD OPTIMIZATION AND EVALUATION
+Optimal threshold: 0.5912 (default=0.5)
+At this threshold: TPR=0.8687, FPR=0.1828
+AUC-ROC: 0.8983
+Accuracy @0.5: 0.8229 (82.29%)
+Accuracy @0.5912: 0.8438 (84.38%)
+              precision    recall  f1-score   support
+
+  Non-Planet     0.8539    0.8172    0.8352        93
+      Planet     0.8350    0.8687    0.8515        99
+
+    accuracy                         0.8438       192
+   macro avg     0.8444    0.8429    0.8433       192
+weighted avg     0.8441    0.8438    0.8436       192
+
+CONFUSION MATRIX EVALUATION
+Confusion Matrix @ threshold 0.591)
+                    Pred: Non-Planet  Pred: Planet
+Actual: Non-Planet                76            17
+Actual: Planet                    13            86

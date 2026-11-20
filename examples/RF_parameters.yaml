@@ -1,9 +1,11 @@
-dataset_path: "/home/angyp/CompAstro_Project/tess_data.csv"
+dataset_path: "./data/tess_data.csv"
 
 RF_params:
-  - n_estimators: 500
-    max_depth: null
-    min_samples_leaf: 1
+
+  # combination 1
+  - n_estimators: 100
+    max_depth: 10
+    min_samples_leaf: 10
     max_features: "sqrt"
     bootstrap: true
     class_weight: null
@@ -11,10 +13,10 @@ RF_params:
     n_jobs: -1
     oob_score: true
 
-  # n_estimator changed
-  - n_estimators: 200
-    max_depth: null
-    min_samples_leaf: 1
+  # combination 2
+  - n_estimators: 1000
+    max_depth: 10
+    min_samples_leaf: 10
     max_features: "sqrt"
     bootstrap: true
     class_weight: null
@@ -22,10 +24,10 @@ RF_params:
     n_jobs: -1
     oob_score: true
 
-  # min_samples_leaf changed
-  - n_estimators: 500
-    max_depth: null
-    min_samples_leaf: 2
+  # combination 3
+  - n_estimators: 100
+    max_depth: 1000
+    min_samples_leaf: 10
     max_features: "sqrt"
     bootstrap: true
     class_weight: null
@@ -33,11 +35,11 @@ RF_params:
     n_jobs: -1
     oob_score: true
 
-  # max_features changed
-  - n_estimators: 500
-    max_depth: null
-    min_samples_leaf: 1
-    max_features: "log2"
+  # combination 4
+  - n_estimators: 100
+    max_depth: 500
+    min_samples_leaf: 10
+    max_features: "sqrt"
     bootstrap: true
     class_weight: null
     random_state: 42

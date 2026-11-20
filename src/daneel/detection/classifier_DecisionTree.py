@@ -352,21 +352,3 @@ if __name__ == "__main__":
     dt_classifier = DecisionTree_classifier(config)
     dt_classifier.run_all_configurations()
     dt_classifier.tune_hyperparameter(input_cv=3)
-
-# ------------------------------------------------------------------
-# Notes
-# ------------------------------------------------------------------
-#
-# On headless systems, WSL environments, or machines without a
-# properly configured graphical backend, matplotlib may raise
-# Qt-related visualization errors when generating figures.
-#
-# In such cases, the module can be executed with a non-interactive
-# backend:
-#
-#     MPLBACKEND=Agg python -m daneel.detection.classifier_DecisionTree
-#
-# This allows confusion matrices and decision-tree plots to be
-# generated and saved without opening graphical windows.
-#
-# ------------------------------------------------------------------

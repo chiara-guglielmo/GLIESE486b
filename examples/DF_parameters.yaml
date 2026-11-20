@@ -1,0 +1,31 @@
+dataset_path: "./data/tess_data.csv"
+
+DT_params:
+
+  # combination 1
+  - max_depth: 4
+    min_samples_split: 10
+    min_samples_leaf: 100
+    max_features: null
+
+  # combination 2
+  - max_depth: 10
+    min_samples_split: 2
+    min_samples_leaf: 6
+    max_features: null
+
+  # combination 3
+  - max_depth: 5
+    min_samples_split: 20
+    min_samples_leaf: 2
+    max_features: null
+
+  # combination 4
+  - max_depth: 10
+    min_samples_split: 5
+    min_samples_leaf: 100
+    max_features: null
+
+model_prefix: "tess_df_model"
+
+save_path: None

@@ -43,6 +43,7 @@ daneel -i <input_file> --transit --output
 - `-i, --input`: Input parameter file(s) (or it use G486b values)
 - `-t, --transit`: Generate a transit light curve from the YAML input
 - `-d, --detection {rf}`: Run exoplanet detection through a Random Forest classifier
+- `-d, --detection {cnn}`: Run exoplanet detection through a Convolutional Neural Network
 - `-o, --output`: Save the transit plot in the current working directory
 
 ### Examples
@@ -56,6 +57,9 @@ daneel -i examples/params.yaml -t -o
 
 # Run exoplanet detection through a Random Forest classifier
 daneel -i examples/RF_parameters.yaml -d rf
+
+# Run exoplanet detection through a Convolutional Neural Network
+daneel -i examples/CNN_parameters.yaml -d cnn
 
 ```
 

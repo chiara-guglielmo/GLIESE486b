@@ -188,7 +188,7 @@ class RandomForest_classifier:
                              columns=['Pred: Non-Planet', 'Pred: Planet']
                              )
         print("CONFUSION MATRIX EVALUATION")
-        print(f"Confusion Matrix @ threshold {threshold:.3f})")
+        print(f"Confusion Matrix @ threshold {threshold:.3f}")
         print(cm_df)
 
         # Plot the confusion matrix and eventually save it as a file
@@ -304,7 +304,7 @@ class RandomForest_classifier:
         Returns
         -------
         results : list of tuples
-            A list where each element contains a tuple of `(params, conf_matrix, metrics)` for each evaluated 
+            A list where each element contains a tuple of '(params, conf_matrix, metrics)' for each evaluated 
             hyperparameter configuration.
         """
 

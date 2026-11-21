@@ -1,4 +1,3 @@
-==============================
 Running Configuration 1: {'max_depth': 5, 'min_samples_split': 10, 'min_samples_leaf': 5, 'max_features': None, 'class_weight': None, 'random_state': 42}
 
 Tree depth: 5
@@ -26,106 +25,107 @@ Actual: Non-Planet                70            23
 Actual: Planet                    17            82
 
 ==============================
-Running Configuration 2: {'max_depth': 10, 'min_samples_split': 10, 'min_samples_leaf': 5, 'max_features': None, 'class_weight': None, 'random_state': 42}
+Running Configuration 2: {'max_depth': 100, 'min_samples_split': 10, 'min_samples_leaf': 5, 'max_features': None, 'class_weight': None, 'random_state': 42}
 
-Tree depth: 10
-Number of leaves: 44
-
-THRESHOLD OPTIMIZATION AND EVALUATION
-Optimal threshold: 0.1667 (default=0.5)
-At this threshold: TPR=0.8586, FPR=0.2903
-AUC-ROC: 0.7731
-Accuracy @0.5: 0.7292 (72.92%)
-Accuracy @0.1667: 0.7865 (78.65%)
-              precision    recall  f1-score   support
-
-  Non-Planet     0.8250    0.7097    0.7630        93
-      Planet     0.7589    0.8586    0.8057        99
-
-    accuracy                         0.7865       192
-   macro avg     0.7920    0.7841    0.7843       192
-weighted avg     0.7909    0.7865    0.7850       192
-
-CONFUSION MATRIX EVALUATION
-Confusion Matrix @ threshold 0.167)
-                    Pred: Non-Planet  Pred: Planet
-Actual: Non-Planet                66            27
-Actual: Planet                    14            85
-
-==============================
-Running Configuration 3: {'max_depth': 10, 'min_samples_split': 50, 'min_samples_leaf': 5, 'max_features': None, 'class_weight': None, 'random_state': 42}
-
-Tree depth: 9
-Number of leaves: 26
+Tree depth: 11
+Number of leaves: 46
 
 THRESHOLD OPTIMIZATION AND EVALUATION
 Optimal threshold: 0.1667 (default=0.5)
-At this threshold: TPR=0.8788, FPR=0.3441
-AUC-ROC: 0.7815
-Accuracy @0.5: 0.7500 (75.00%)
+At this threshold: TPR=0.8586, FPR=0.3226
+AUC-ROC: 0.7674
+Accuracy @0.5: 0.7188 (71.88%)
 Accuracy @0.1667: 0.7708 (77.08%)
               precision    recall  f1-score   support
 
-  Non-Planet     0.8356    0.6559    0.7349        93
-      Planet     0.7311    0.8788    0.7982        99
+  Non-Planet     0.8182    0.6774    0.7412        93
+      Planet     0.7391    0.8586    0.7944        99
 
     accuracy                         0.7708       192
-   macro avg     0.7834    0.7674    0.7666       192
-weighted avg     0.7817    0.7708    0.7675       192
+   macro avg     0.7787    0.7680    0.7678       192
+weighted avg     0.7774    0.7708    0.7686       192
 
 CONFUSION MATRIX EVALUATION
 Confusion Matrix @ threshold 0.167)
                     Pred: Non-Planet  Pred: Planet
-Actual: Non-Planet                61            32
-Actual: Planet                    12            87
+Actual: Non-Planet                63            30
+Actual: Planet                    14            85
 
 ==============================
-Running Configuration 4: {'max_depth': 10, 'min_samples_split': 10, 'min_samples_leaf': 10, 'max_features': None, 'class_weight': None, 'random_state': 42}
+Running Configuration 3: {'max_depth': 15, 'min_samples_split': 100, 'min_samples_leaf': 5, 'max_features': None, 'class_weight': None, 'random_state': 42}
 
-Tree depth: 9
-Number of leaves: 32
-
-THRESHOLD OPTIMIZATION AND EVALUATION
-Optimal threshold: 0.3333 (default=0.5)
-At this threshold: TPR=0.8283, FPR=0.2688
-AUC-ROC: 0.7720
-Accuracy @0.5: 0.7552 (75.52%)
-Accuracy @0.3333: 0.7812 (78.12%)
-              precision    recall  f1-score   support
-
-  Non-Planet     0.8000    0.7312    0.7640        93
-      Planet     0.7664    0.8283    0.7961        99
-
-    accuracy                         0.7812       192
-   macro avg     0.7832    0.7797    0.7801       192
-weighted avg     0.7827    0.7812    0.7806       192
-
-CONFUSION MATRIX EVALUATION
-Confusion Matrix @ threshold 0.333)
-                    Pred: Non-Planet  Pred: Planet
-Actual: Non-Planet                68            25
-Actual: Planet                    17            82
-
-HYPERPARAMETERS TUNING
-Best parameters: {'max_depth': 10, 'max_features': None, 'min_samples_leaf': 10, 'min_samples_split': 50}
+Tree depth: 10
+Number of leaves: 21
 
 THRESHOLD OPTIMIZATION AND EVALUATION
 Optimal threshold: 0.4000 (default=0.5)
-At this threshold: TPR=0.8586, FPR=0.2796
-AUC-ROC: 0.7820
-Accuracy @0.5: 0.7760 (77.60%)
-Accuracy @0.4000: 0.7917 (79.17%)
+At this threshold: TPR=0.8384, FPR=0.3333
+AUC-ROC: 0.7854
+Accuracy @0.5: 0.7396 (73.96%)
+Accuracy @0.4000: 0.7552 (75.52%)
               precision    recall  f1-score   support
 
-  Non-Planet     0.8272    0.7204    0.7701        93
-      Planet     0.7658    0.8586    0.8095        99
+  Non-Planet     0.7949    0.6667    0.7251        93
+      Planet     0.7281    0.8384    0.7793        99
 
-    accuracy                         0.7917       192
-   macro avg     0.7965    0.7895    0.7898       192
-weighted avg     0.7955    0.7917    0.7904       192
+    accuracy                         0.7552       192
+   macro avg     0.7615    0.7525    0.7522       192
+weighted avg     0.7604    0.7552    0.7531       192
 
 CONFUSION MATRIX EVALUATION
 Confusion Matrix @ threshold 0.400)
                     Pred: Non-Planet  Pred: Planet
-Actual: Non-Planet                67            26
-Actual: Planet                    14            85
+Actual: Non-Planet                62            31
+Actual: Planet                    16            83
+
+==============================
+Running Configuration 4: {'max_depth': 10, 'min_samples_split': 10, 'min_samples_leaf': 100, 'max_features': None, 'class_weight': None, 'random_state': 42}
+
+Tree depth: 3
+Number of leaves: 6
+
+THRESHOLD OPTIMIZATION AND EVALUATION
+Optimal threshold: 0.5849 (default=0.5)
+At this threshold: TPR=0.6566, FPR=0.2366
+AUC-ROC: 0.7513
+Accuracy @0.5: 0.7083 (70.83%)
+Accuracy @0.5849: 0.7083 (70.83%)
+              precision    recall  f1-score   support
+
+  Non-Planet     0.6762    0.7634    0.7172        93
+      Planet     0.7471    0.6566    0.6989        99
+
+    accuracy                         0.7083       192
+   macro avg     0.7117    0.7100    0.7080       192
+weighted avg     0.7128    0.7083    0.7078       192
+
+CONFUSION MATRIX EVALUATION
+Confusion Matrix @ threshold 0.585)
+                    Pred: Non-Planet  Pred: Planet
+Actual: Non-Planet                71            22
+Actual: Planet                    34            65
+
+==============================
+HYPERPARAMETERS TUNING
+Best parameters: {'max_depth': 100, 'max_features': None, 'min_samples_leaf': 5, 'min_samples_split': 100}
+
+THRESHOLD OPTIMIZATION AND EVALUATION
+Optimal threshold: 0.4000 (default=0.5)
+At this threshold: TPR=0.8384, FPR=0.3333
+AUC-ROC: 0.7854
+Accuracy @0.5: 0.7396 (73.96%)
+Accuracy @0.4000: 0.7552 (75.52%)
+              precision    recall  f1-score   support
+
+  Non-Planet     0.7949    0.6667    0.7251        93
+      Planet     0.7281    0.8384    0.7793        99
+
+    accuracy                         0.7552       192
+   macro avg     0.7615    0.7525    0.7522       192
+weighted avg     0.7604    0.7552    0.7531       192
+
+CONFUSION MATRIX EVALUATION
+Confusion Matrix @ threshold 0.400)
+                    Pred: Non-Planet  Pred: Planet
+Actual: Non-Planet                62            31
+Actual: Planet                    16            83

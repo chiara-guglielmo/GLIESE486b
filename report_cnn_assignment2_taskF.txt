@@ -1,0 +1,138 @@
+==============================
+Running Configuration 1: {'conv_filters': [32, 64, 128], 'kernel_size': 7, 'pooling_size': 2, 'pooling_output_size': 8, 'dropout_rates_1': [0.3, 0.4, 0.4], 'dropout_rates_2': [0.4, 0.4], 'hidden_dims': [128, 64], 'learning_rate': '2e-4', 'batch_size': 64, 'epochs': 150}
+
+THRESHOLD OPTIMIZATION AND EVALUATION
+Optimal threshold (Youden's J): 0.3733 (default=0.5)
+Evaluated threshold: 0.3692
+At optimal threshold: TPR=0.8687, FPR=0.1935
+AUC-ROC: 0.8722
+Accuracy (default=0.5): 0.6823 (68.23%)
+Accuracy (threshold=0.3692): 0.8281 (82.81%)
+
+Classification report:
+              precision    recall  f1-score   support
+
+  Non-Planet     0.8750    0.7527    0.8092        93
+      Planet     0.7946    0.8990    0.8436        99
+
+    accuracy                         0.8281       192
+   macro avg     0.8348    0.8258    0.8264       192
+weighted avg     0.8336    0.8281    0.8270       192
+
+Prediction distribution:
+  Predicted 0: 80
+  Predicted 1: 112
+True distribution:
+  True 0: 93
+  True 1: 99
+
+CONFUSION MATRIX EVALUATION
+Confusion Matrix @ threshold 0.369
+                    Pred: Non-Planet  Pred: Planet
+Actual: Non-Planet                70            23
+Actual: Planet                    10            89
+
+
+==============================
+Running Configuration 2: {'conv_filters': [32, 64, 128, 128], 'kernel_size': 5, 'pooling_size': 2, 'pooling_output_size': 6, 'dropout_rates_1': [0.2, 0.2, 0.3, 0.3], 'dropout_rates_2': [0.3, 0.2], 'hidden_dims': [128, 64], 'learning_rate': '3e-4', 'batch_size': 64, 'epochs': 150}
+
+THRESHOLD OPTIMIZATION AND EVALUATION
+Optimal threshold (Youden's J): 0.2702 (default=0.5)
+Evaluated threshold: 0.2544
+At optimal threshold: TPR=0.8485, FPR=0.1720
+AUC-ROC: 0.8790
+Accuracy (default=0.5): 0.6875 (68.75%)
+Accuracy (threshold=0.2544): 0.8229 (82.29%)
+
+Classification report:
+              precision    recall  f1-score   support
+
+  Non-Planet     0.9155    0.6989    0.7927        93
+      Planet     0.7686    0.9394    0.8455        99
+
+    accuracy                         0.8229       192
+   macro avg     0.8420    0.8192    0.8191       192
+weighted avg     0.8397    0.8229    0.8199       192
+
+Prediction distribution:
+  Predicted 0: 71
+  Predicted 1: 121
+True distribution:
+  True 0: 93
+  True 1: 99
+
+CONFUSION MATRIX EVALUATION
+Confusion Matrix @ threshold 0.254
+                    Pred: Non-Planet  Pred: Planet
+Actual: Non-Planet                65            28
+Actual: Planet                     6            93
+
+
+==============================
+Running Configuration 3: {'conv_filters': [32, 64, 128], 'kernel_size': 9, 'pooling_size': 2, 'pooling_output_size': 6, 'dropout_rates_1': [0.2, 0.3, 0.4], 'dropout_rates_2': [0.3, 0.2], 'hidden_dims': [128, 64], 'learning_rate': '2e-4', 'batch_size': 128, 'epochs': 150}
+
+THRESHOLD OPTIMIZATION AND EVALUATION
+Optimal threshold (Youden's J): 0.2960 (default=0.5)
+Evaluated threshold: 0.2893
+At optimal threshold: TPR=0.8889, FPR=0.1935
+AUC-ROC: 0.8654
+Accuracy (default=0.5): 0.6510 (65.10%)
+Accuracy (threshold=0.2893): 0.7917 (79.17%)
+
+Classification report:
+              precision    recall  f1-score   support
+
+  Non-Planet     0.9077    0.6344    0.7468        93
+      Planet     0.7323    0.9394    0.8230        99
+
+    accuracy                         0.7917       192
+   macro avg     0.8200    0.7869    0.7849       192
+weighted avg     0.8172    0.7917    0.7861       192
+
+Prediction distribution:
+  Predicted 0: 65
+  Predicted 1: 127
+True distribution:
+  True 0: 93
+  True 1: 99
+
+CONFUSION MATRIX EVALUATION
+Confusion Matrix @ threshold 0.289
+                    Pred: Non-Planet  Pred: Planet
+Actual: Non-Planet                59            34
+Actual: Planet                     6            93
+
+
+==============================
+Running Configuration 4: {'conv_filters': [64, 128], 'kernel_size': 7, 'pooling_size': 2, 'pooling_output_size': 8, 'dropout_rates_1': [0.3, 0.4], 'dropout_rates_2': [0.4, 0.3], 'hidden_dims': [128, 64], 'learning_rate': '5e-4', 'batch_size': 128, 'epochs': 150}
+
+THRESHOLD OPTIMIZATION AND EVALUATION
+Optimal threshold (Youden's J): 0.4932 (default=0.5)
+Evaluated threshold: 0.4836
+At optimal threshold: TPR=0.8687, FPR=0.1720
+AUC-ROC: 0.8689
+Accuracy (default=0.5): 0.8125 (81.25%)
+Accuracy (threshold=0.4836): 0.8073 (80.73%)
+
+Classification report:
+              precision    recall  f1-score   support
+
+  Non-Planet     0.9118    0.6667    0.7702        93
+      Planet     0.7500    0.9394    0.8341        99
+
+    accuracy                         0.8073       192
+   macro avg     0.8309    0.8030    0.8021       192
+weighted avg     0.8284    0.8073    0.8031       192
+
+Prediction distribution:
+  Predicted 0: 68
+  Predicted 1: 124
+True distribution:
+  True 0: 93
+  True 1: 99
+
+CONFUSION MATRIX EVALUATION
+Confusion Matrix @ threshold 0.484
+                    Pred: Non-Planet  Pred: Planet
+Actual: Non-Planet                62            31
+Actual: Planet                     6            93

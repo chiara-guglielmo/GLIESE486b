@@ -15,7 +15,7 @@ CNN_params:
     batch_size: 64
     epochs: 150
 
-# Deeper convolutional block, smaller kernel and increased dropout
+# Deeper convolutional block and smaller kernel
   - conv_filters: [32, 64, 128, 128]
     kernel_size: 5
     pooling_size: 2
@@ -27,7 +27,7 @@ CNN_params:
     batch_size: 64
     epochs: 150
 
-# Larger kernel, larger batch size and slower initial learning rate
+# Wider kernel and larger batch size
   - conv_filters: [32, 64, 128]
     kernel_size: 9
     pooling_size: 2
@@ -39,7 +39,7 @@ CNN_params:
     batch_size: 128
     epochs: 150
 
-# Lighter convolutional block, larger batch size and faster initial learning rate
+# Lighter convolutional block, larger batch size and higher initial learning rate
   - conv_filters: [64, 128]
     kernel_size: 7
     pooling_size: 2

@@ -62,7 +62,7 @@ class CNN_classifier:
             'hidden_dims': [128, 64],
             'learning_rate': 2e-4,
             'batch_size': 64,
-            'epochs': 200,
+            'epochs': 150,
         }
 
         # Import hyperparameters of the CNN model from the configuration file

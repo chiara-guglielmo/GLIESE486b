@@ -9,7 +9,7 @@ from sklearn.metrics import confusion_matrix, classification_report, accuracy_sc
 import torch
 import torch.nn as nn
 from torchinfo import summary
-from torch.utils.data import DataLoader
+from torch.utils.data import TensorDataset, DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from .dataset import DataSetCreation
@@ -47,9 +47,7 @@ class CNN_classifier:
         
         # Import dataset_path from configuration file
         dataset_path = config.get("dataset_path")
-        self.csv_path = Path(dataset_path)
-        if self.csv_path is None:
-            raise ValueError("dataset_path must be specified in the YAML configuration.")
+        self.csv_path = Path(dataset_path) if dataset_path is not None else None
 
         # Define default CNN hyperparameters and update them if other inputs are given
         default_params = {
@@ -99,13 +97,25 @@ class CNN_classifier:
         print(f"Computer device used: {self.device}")
 
         # Initialize the PyTorch CNN model with the first configuration and send it to the available device
-        self.load_data()
-        self.model, self.optimizer, self.scheduler, self.loss_function = self.build_cnn(self.param_configs[0])
+        self.scaler = None
+        self.model = None
 
+        if self.csv_path is not None:
+            self.load_data()
+            self.model, self.optimizer, self.scheduler, self.loss_function = (self.build_cnn(self.param_configs[0]))
+            
     def load_data(self):
-        """Load data properly formatted by calling the DataSetCreation class from dataset.py in "deep_learning" mode."""
-        loader = DataSetCreation(csv_path=self.csv_path, mode="deep_learning")
+        if self.csv_path is None:
+            raise ValueError("dataset_path must be specified in the YAML configuration.")
+
+        if not self.csv_path.is_file():
+            raise FileNotFoundError(f"Dataset CSV file not found: {self.csv_path}")
+
+        loader = DataSetCreation(csv_path=self.csv_path,mode="deep_learning")
+
         self.train, self.test, self.validation = loader.load_pytorch_data()
+        self.scaler = loader.scaler
+        
         return self.train, self.test, self.validation
 
     def build_cnn(self, config_params=None):
@@ -171,9 +181,10 @@ class CNN_classifier:
         learning_rate = float(config_params['learning_rate'])
         batch_size = config_params['batch_size']
 
-        # Extracts automatically input channels from the loaded trained dataset
-        sample_x, _ = self.train[0]
-        in_channels = sample_x.shape[0]
+        # Extracts automatically input channels from the loaded trained dataset (not anymore)
+        #sample_x, _ = self.train[0]
+        #in_channels = sample_x.shape[0]
+        in_channels = 1
 
         # FEATURE EXTRACTOR (convolutional layers)
         layers = []
@@ -597,7 +608,12 @@ class CNN_classifier:
             A list where each element contains a tuple of '(params, conf_matrix, metrics)' for each evaluated 
             hyperparameter configuration.
          """
-        
+        if self.csv_path is None:
+            raise ValueError(
+                "dataset_path must be specified in the YAML "
+                "configuration to train the CNN."
+            )
+                
         results = []
         for i, params in enumerate(self.param_configs, start=1):
             print(f"\n==============================")
@@ -608,8 +624,200 @@ class CNN_classifier:
             self.model, self.optimizer, self.scheduler, self.loss_function = self.build_cnn(params)
             self.train_model(params)
             conf_matrix, metrics = self.test_model(params)
+            
+            self.save_weights(path=f"cnn_weights_{i}.pth",config_params=params,threshold=metrics[1])
+
             results.append((params, conf_matrix, metrics))
     
+        return results
+
+    def save_weights(self, path="cnn_weights.pth", config_params=None,
+                 threshold=0.5):
+
+        if config_params is None:
+            config_params = self.param_configs[0]
+
+        torch.save({
+            "model_state_dict": self.model.state_dict(),
+            "config_params": config_params,
+            "threshold": threshold,
+            "scaler_mean": (torch.tensor(self.scaler.mean_)if self.scaler is not None else None),
+            "scaler_scale": (torch.tensor(self.scaler.scale_)if self.scaler is not None else None)
+        }, path)
+
+        print(f"Model saved to: {path}")
+
+    def load_weights(self, path="cnn_weights.pth"):
+
+        checkpoint = torch.load(
+            path,
+            map_location="cpu",
+            weights_only=True
+        )
+
+        config_params = checkpoint["config_params"]
+
+        self.model, self.optimizer, self.scheduler, self.loss_function = (self.build_cnn(config_params))
+
+        self.model.load_state_dict(checkpoint["model_state_dict"])
+        self.threshold = checkpoint.get("threshold", 0.5)
+
+
+        self.scaler_mean = checkpoint["scaler_mean"]
+        self.scaler_scale = checkpoint["scaler_scale"]
+
+        self.model.eval()
+
+        print(f"Model loaded from: {path}")
+
+    
+    def predict(self, csv_path, weights_path=None, threshold=None, standardized=False,
+                batch_size=128, save_path=None):
+
+        # Select default weights if no path is provided
+        if weights_path is None:
+            weights_path = Path(__file__).resolve().parent / "cnn_weights_default.pth"
+        else:
+            weights_path = Path(weights_path)
+
+        # Check if weights file exists
+        if not weights_path.is_file():
+            raise FileNotFoundError(
+                f"Weights file not found: {weights_path}"
+            )
+
+        # Load model weights, configuration, scaler and threshold
+        self.load_weights(weights_path)
+
+        if threshold is None:
+            threshold = getattr(self, "threshold", 0.5)
+
+        # Load CSV
+        df = pd.read_csv(csv_path)
+
+        # Identify and sort flux columns
+        flux_cols = sorted(
+            [
+                col for col in df.columns
+                if col.startswith("flux_") and col[5:].isdigit()
+            ],
+            key=lambda col: int(col[5:])
+        )
+
+        if not flux_cols:
+            raise ValueError("No flux columns found in the CSV.")
+
+        X = df[flux_cols].to_numpy(dtype=np.float64)
+
+        n_samples, n_bins = X.shape
+        target_bins = 1000
+
+        if n_samples == 0:
+            raise ValueError("The CSV contains no light curves.")
+
+        if not np.isfinite(X).all():
+            raise ValueError("The CSV contains NaN or infinite flux values.")
+
+        print(f"Number of light curves: {n_samples}")
+        print(f"Number of bins: {n_bins}")
+
+        # Resize light curves if necessary
+        if n_bins != target_bins:
+
+            print(
+                f"WARNING: Expected {target_bins} bins, "
+                f"but found {n_bins}."
+            )
+
+            print(
+                f"WARNING: Light curves will be resampled "
+                f"from {n_bins} to {target_bins} bins."
+            )
+
+            if standardized:
+                raise ValueError(
+                    "Resampling requires non-standardized flux values."
+                )
+
+            old_grid = np.linspace(0, 1, n_bins)
+            new_grid = np.linspace(0, 1, target_bins)
+
+            X = np.array([
+                np.interp(new_grid, old_grid, curve)
+                for curve in X
+            ])
+
+        # Apply original training scaler
+        if not standardized:
+
+            if self.scaler_mean is not None:
+
+                mean = self.scaler_mean.cpu().numpy()
+                scale = self.scaler_scale.cpu().numpy()
+
+                X = (X - mean) / scale
+
+        # Convert to PyTorch tensor: (N, 1, 1000)
+        X = torch.as_tensor(X, dtype=torch.float32).unsqueeze(1)
+
+        # Create DataLoader
+        dataset = TensorDataset(X)
+
+        loader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=False
+        )
+
+        # Predict probabilities
+        self.model.eval()
+
+        probabilities = []
+
+        with torch.no_grad():
+
+            for (batch_X,) in loader:
+
+                batch_X = batch_X.to(self.device)
+
+                logits = self.model(batch_X)
+                probs = torch.sigmoid(logits)
+
+                probabilities.append(
+                    probs.cpu().numpy().reshape(-1)
+                )
+
+        probabilities = np.concatenate(probabilities)
+
+        # Binary classification
+        predictions = (probabilities >= threshold).astype(int)
+
+        # Create output DataFrame preserving original metadata
+        results = df.drop(columns=flux_cols).copy()
+
+        results["planet_probability"] = probabilities
+        results["non_planet_probability"] = 1 - probabilities
+        results["prediction"] = predictions
+        results["classification"] = np.where(
+            predictions == 1,
+            "Planet",
+            "Non-Planet"
+        )
+
+        # Print results
+        print("\nPREDICTION RESULTS")
+        print(f"Threshold: {threshold:.4f}")
+        print(f"Total light curves: {len(results)}")
+        print(f"Predicted planets: {(predictions == 1).sum()}")
+        print(f"Predicted non-planets: {(predictions == 0).sum()}")
+
+        # Optionally save results
+        if save_path is not None:
+
+            results.to_csv(save_path, index=False)
+
+            print(f"Results saved to: {save_path}")
+
         return results
 
 if __name__ == "__main__":

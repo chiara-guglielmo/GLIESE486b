@@ -34,6 +34,7 @@ class DataSetCreation:
         # Keep the legacy model argument for existing callers.
         self.csv_path = csv_path
         self._mode = mode
+        self.scaler = None
 
     def prepare(self, n_bins=1000, use_scaler=True, samples_per_class=350):
         """Prepare datasets for the configured mode.
@@ -236,6 +237,7 @@ class DataSetCreation:
             if scaler is not None:
                 X_eval = scaler.transform(X_eval)
             splits.append((X_eval, y[idx]))
+        self.scaler = scaler
         return splits, scaler
 
     def load_data(self, n_bins=1000, use_scaler=True, samples_per_class=350):

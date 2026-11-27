@@ -5,9 +5,43 @@ from .detection.transit import transit
 from .detection.classifier_RandomForest import RandomForest_classifier
 from .detection.classifier_CNN import CNN_classifier
 from .parameters.parameters import Parameters
+from pathlib import Path
+from .detection.GAN import GAN
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+def resolve_path(path):
+
+    if path is None:
+        return None
+
+    path = Path(path).expanduser()
+
+    if not path.is_absolute():
+        path = PROJECT_ROOT / path
+
+    return str(path.resolve())
+
+
+def get_config_path(input_files, default_file):
+
+    if input_files is None:
+        config_path = PROJECT_ROOT / "examples" / default_file
+    else:
+        config_path = Path(input_files[0]).expanduser().resolve()
+
+    if not config_path.is_file():
+        raise FileNotFoundError(
+            f"Configuration file not found: {config_path}"
+        )
+
+    return config_path
 
 def main():
-    parser = argparse.ArgumentParser(description="Daneel: a Python package to model and analyse exoplanet transits")
+    parser = argparse.ArgumentParser(
+        description="Daneel: a Python package to model and analyse exoplanet transits"
+    )
 
     parser.add_argument("-t", "--transit", action="store_true", help="Plot a transit light curve")
 
@@ -15,7 +49,11 @@ def main():
 
     parser.add_argument("-d", "--detection", choices=["rf", "cnn"], default=None, help="Run exoplanet detection through Random Forest classifier ('rf') or CNN ('cnn')")
 
-    parser.add_argument("-o", "--output", action="store_true", help="Save the transit plot in the current working directory")
+    parser.add_argument("-o", "--output", action="store_true", help="Save the output in the current working directory")
+
+    parser.add_argument("-p", "--predict", type=str, default=None, metavar="CSV", help="Classify light curves from a CSV file using a pretrained CNN")
+
+    parser.add_argument("-dr", "--dream", action="store_true", help="Train a GAN and generate synthetic light curves.")
 
     args = parser.parse_args()
 
@@ -23,47 +61,103 @@ def main():
     if args.transit:
         transit_params_list = []
         transit_params = None
+
         if args.input is not None:
 
             # Loop through the files to extract their dictionaries into a list
             for yaml_file in args.input:
                 parameters = Parameters(yaml_file)
                 transit_params = parameters.get("transit")
+
                 if not isinstance(transit_params, dict) or not transit_params:
                     parser.error("The YAML file must contain a non-empty 'transit' dictionary.")
-                
+
                 transit_params_list.append(transit_params)
+
         else:
             transit_params_list = [None]
-        
-        transit(transit_params_list, save=args.output)  
 
-    # Handle detection through Random Forest classifier
+        transit(transit_params_list, save=args.output)
+
+        # Handle detection through Random Forest
     if args.detection == "rf":
-        if args.input is not None:
 
-            yaml_file = args.input[0] if isinstance(args.input, list) else args.input
-            parameters = Parameters(yaml_file)
-            config = {
-                "dataset_path": parameters.get("dataset_path"),
-                "RF_params": parameters.get("RF_params"),
-                "model_prefix": parameters.get("model_prefix", "tess_rf_model"),
-                "save_path": args.output if args.output else parameters.get("save_path", None)
-                }
+        yaml_file = get_config_path(
+            args.input,
+            "RF_parameters.yaml"
+        )
+
+        parameters = Parameters(str(yaml_file))
+
+        config = {
+            "dataset_path": resolve_path(
+                parameters.get("dataset_path")
+            ),
+            "RF_params": parameters.get("RF_params"),
+            "model_prefix": parameters.get(
+                "model_prefix", "tess_rf_model"
+            ),
+            "save_path": (
+                args.output if args.output
+                else parameters.get("save_path", None)
+            )
+        }
+
         RandomForest_classifier(config).run_all_configurations()
 
     # Handle detection through CNN
     if args.detection == "cnn":
-        if args.input is not None:
 
-            yaml_file = args.input[0] if isinstance(args.input, list) else args.input
-            parameters = Parameters(yaml_file)
-            config = {
-                "dataset_path": parameters.get("dataset_path"),
-                "device": parameters.get("device", None),
-                "CNN_params": parameters.get("CNN_params"),
-                }
+        yaml_file = get_config_path(
+            args.input,
+            "CNN_parameters.yaml"
+        )
+
+        parameters = Parameters(str(yaml_file))
+
+        config = {
+            "dataset_path": resolve_path(
+                parameters.get("dataset_path")
+            ),
+            "device": parameters.get("device", None),
+            "CNN_params": parameters.get("CNN_params"),
+        }
+
         CNN_classifier(config).run_all_configurations()
+
+    # Handle prediction through pretrained CNN
+    if args.predict is not None:
+
+        cnn_classifier = CNN_classifier(config={})
+
+        results = cnn_classifier.predict(
+            csv_path=args.predict,
+            save_path="predictions.csv" if args.output else None
+        )
+
+        n_planets = (results["prediction"] == 1).sum()
+        n_total = len(results)
+
+        print(f"Detected planets: {n_planets}/{n_total}")
+        print(f"Percentage: {100 * n_planets / n_total:.2f}%")
+
+    # Handle GAN training and light curve generation
+    if args.dream:
+
+        yaml_file = get_config_path(
+            args.input,
+            "GAN_parameters.yaml"
+        )
+
+        with open(yaml_file, "r") as file:
+            config = yaml.safe_load(file) or {}
+
+        config["dataset_path"] = resolve_path(
+            config.get("dataset_path")
+        )
+
+        GAN(config=config).run(save=args.output)
+
 
 if __name__ == "__main__":
     main()

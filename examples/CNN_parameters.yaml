@@ -1,6 +1,6 @@
-dataset_path: "/home/angyp/CompAstro_Project/tess_data.csv"
+dataset_path: "./data/tess_data.csv"
 
-device: null
+device: cpu
 
 # Default neural-network architecture
 CNN_params:

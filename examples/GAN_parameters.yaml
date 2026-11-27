@@ -1,0 +1,15 @@
+dataset_path: "./data/tess_data.csv"
+
+device: null
+
+GAN_params:
+  batch_size: 32
+  learning_rate: 2e-4
+  num_epochs: 500
+  noise_dim: 100
+  features_generator: 64
+  features_discriminator: 32
+  beta1: 0.5
+  target_bins: 1000
+
+N_lightcurve: 100

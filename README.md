@@ -40,32 +40,87 @@ daneel -i <input_file> --transit --output
 
 ### Command-line options
 
-- `-i, --input`: Input parameter file(s) (or it use G486b values)
-- `-t, --transit`: Generate a transit light curve from the YAML input
-- `-d, --detection {rf}`: Run exoplanet detection through a Random Forest classifier
-- `-d, --detection {cnn}`: Run exoplanet detection through a Convolutional Neural Network
-- `-o, --output`: Save the transit plot in the current working directory
+- `-i, --input`: Input YAML parameter file(s). If omitted, the default configuration for the selected operation is used.
+- `-t, --transit`: Generate a transit light curve. If no input file is provided, the default GJ 486 b parameters are used.
+- `-d, --detection {rf}`: Train and evaluate a Random Forest classifier for exoplanet detection.
+- `-d, --detection {cnn}`: Train and evaluate a Convolutional Neural Network for exoplanet detection.
+- `-p, --predict CSV`: Classify light curves from a CSV file using the pretrained Convolutional Neural Network, without retraining the model.
+- `-g, --gan`: Train a Generative Adversarial Network (GAN) and generate synthetic planetary light curves.
+- `-o, --output`: Enable additional output saving for supported operations in the current working directory.
 
 ### Examples
 
 ```bash
-# Run exoplanet detection with default settings
-daneel --transit
+# Generate a transit light curve with default parameters
+daneel -t
 
-# Run exoplanet detection with a given config and save the plot
+# Generate a transit light curve with custom parameters and save the plot
 daneel -i examples/params.yaml -t -o
 
-# Run exoplanet detection through a Random Forest classifier
+# Train a Random Forest classifier with default parameters
+daneel -d rf
+
+# Train a Random Forest classifier with custom parameters
 daneel -i examples/RF_parameters.yaml -d rf
 
-# Run exoplanet detection through a Convolutional Neural Network
+# Train a Convolutional Neural Network with default parameters
+daneel -d cnn
+
+# Train a Convolutional Neural Network with custom parameters
 daneel -i examples/CNN_parameters.yaml -d cnn
 
+# Classify light curves using the pretrained CNN
+daneel -p tess_data.csv
+
+# Classify light curves and save the predictions
+daneel -p tess_data.csv -o
+
+# Train the GAN using the default configuration
+daneel -g
+
+# Train the GAN using the default configuration and save all results
+daneel -g -o
+
+# Train the GAN using a custom configuration
+daneel -i examples/GAN_parameters.yaml -g
+
+# Train the GAN using a custom configuration and save all results
+daneel -i examples/GAN_parameters.yaml -g -o
+
+# Classify GAN-generated light curves using the pretrained CNN
+daneel -p GAN_generated_curves.csv -o
 ```
 
 ## Input File Format
 
-The input file(s) should be one or more YAML files containing the necessary parameters for the analysis.
+The input format depends on the selected operation.
+
+### YAML configuration files
+
+Transit generation, classifier training and GAN training use YAML
+configuration files containing the parameters required for the analysis.
+
+Example configuration files are available in the `examples/` directory.
+
+### Default configurations
+
+When the `-i` or `--input` option is omitted, the following default
+configurations are used:
+
+| Operation | Default configuration |
+|-----------|-----------------------|
+| Transit generation | Default GJ 486 b parameters |
+| Random Forest | `examples/RF_parameters.yaml` |
+| CNN | `examples/CNN_parameters.yaml` |
+| GAN | `examples/GAN_parameters.yaml` |
+
+The default configuration files are located relative to the project
+root, independently of the current working directory.
+
+When training a classifier or a GAN, the dataset path must be specified
+in the configuration file.
+
+Missing configuration files or invalid dataset paths raise an error.
 
 ## Development
 
@@ -85,6 +140,9 @@ This project is licensed under the GNU General Public License v3.0.
 ## Author
 
 Tiziano Zingales (tiziano.zingales@unipd.it), 
+
 Angelica Plazzotta (angelica.plazzotta@studenti.unipd.it), 
+
 Chiara Guglielmo (chiara.guglielmo.1@studenti.unipd.it), 
+
 Mattia Saccon (mattia.saccon@studenti.unipd.it)
